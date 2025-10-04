@@ -16,6 +16,13 @@ public enum SuccessStatus {
     SEND_LOGIN_SUCCESS(HttpStatus.OK,"로그인 성공"),
     SEND_REISSUE_TOKEN_SUCCESS(HttpStatus.OK,"토큰 재발급 성공"),
     SEND_HEALTH_CHECK_SUCCESS(HttpStatus.OK,"서버 상태 체크 성공"),
+    // Inventory (재고) 관련
+    INVENTORY_FETCH_SUCCESS(HttpStatus.OK, "재고 조회 성공"),
+    INVENTORY_SEARCH_SUCCESS(HttpStatus.OK, "재고 검색 성공"),
+    INVENTORY_UNDER_LIMIT_SUCCESS(HttpStatus.OK, "부족 재고 조회 성공"),
+    PART_DISTRIBUTION_SUCCESS(HttpStatus.OK, "부품 분포 조회 성공"),
+    INVENTORY_ANALYSIS_SUCCESS(HttpStatus.OK, "재고 분석 조회 성공"),
+    INVENTORY_EXPORT_SUCCESS(HttpStatus.OK, "재고 분석 내보내기 성공"),
 
     /**
      * 201
