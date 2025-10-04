@@ -7,6 +7,7 @@ import com.stockmate.parts.api.parts.dto.PartsDistributionDto;
 import com.stockmate.parts.api.parts.service.InventoryService;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -26,7 +27,7 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
-    // 1) 재고 조회
+    @Operation(summary = "재고조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getInventories(
             @RequestParam Long userId,
@@ -38,7 +39,7 @@ public class InventoryController {
         return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
     }
 
-    // 2) 재고 검색
+    @Operation(summary = "재고검색")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> searchInventories(
             @RequestParam Long userId,
@@ -51,7 +52,7 @@ public class InventoryController {
         return ApiResponse.success(SuccessStatus.INVENTORY_SEARCH_SUCCESS, data);
     }
 
-    // 3) 부족 재고 조회
+    @Operation(summary = "부족재고 조회")
     @GetMapping("/under-limit")
     public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getUnderLimitInventories(
             @RequestParam Long userId,
@@ -62,14 +63,14 @@ public class InventoryController {
         return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
     }
 
-    // 2) 부품 분포 요약
+    @Operation(summary = "부품 분포 요약-임시")
     @GetMapping("/parts/{partId}")
     public ResponseEntity<ApiResponse<PartsDistributionDto>> getPartDistribution(@PathVariable Long partId) {
         var body = inventoryService.getPartDistribution(partId);
         return ApiResponse.success(SuccessStatus.PART_DISTRIBUTION_SUCCESS, body);
     }
 
-    // 3) 전사 재고 분석
+    @Operation(summary = "전사 재고 분석-임시")
     @GetMapping("/analysis")
     public ResponseEntity<ApiResponse<PageResponseDto<AnalysisRowDto>>> getAnalysis(
             @RequestParam(required = false) String q,
@@ -80,7 +81,7 @@ public class InventoryController {
         return ApiResponse.success(SuccessStatus.INVENTORY_ANALYSIS_SUCCESS, result);
     }
 
-    // 4) 전사 재고 분석 Export (CSV 기본, ?format=xlsx 지원 가능)
+    @Operation(summary = "전사 재고 분석 export")
     @GetMapping("/analysis/export")
     public ResponseEntity<Resource> exportAnalysis(
             @RequestParam(required = false) String q,
