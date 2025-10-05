@@ -9,19 +9,19 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Parts extends BaseTimeEntity {
+@Builder
+@Table(name = "part_mid_cate")
+public class PartMidCate extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String name;
-    private Long price;
-    private String image;
-    long amount;
+    @Column(nullable = false, length = 50)
+    private String name; // 예: 브레이크 시스템, 엔진 부품 등
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mid_cate_id")
-    private PartMidCate midCate;
-
+    @JoinColumn(name = "big_cate_id")
+    private PartBigCate bigCate; // 대분류 (선택)
 }
+

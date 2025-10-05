@@ -14,14 +14,14 @@ import java.util.List;
 @RequestMapping("/api")
 public class PartsController {
 
-    @GetMapping("/parts")
-    public List<Parts> getParts() {
-
-        ArrayList<Parts> parts = new ArrayList<>();
-        parts.add(new Parts(1L,"자동차바퀴",23));
-        parts.add(new Parts(2L,"자동차 엔진",50));
-        parts.add(new Parts(3L,"자동차 쇼바",40));
-
-        return parts;
-    }
+//    @GetMapping("/parts")
+//    public List<Parts> getParts() {
+//
+//        ArrayList<Parts> parts = new ArrayList<>();
+//        parts.add(new Parts(1L,"자동차바퀴",23));
+//        parts.add(new Parts(2L,"자동차 엔진",50));
+//        parts.add(new Parts(3L,"자동차 쇼바",40));
+//
+//        return parts;
+//    }
 }

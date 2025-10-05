@@ -9,19 +9,14 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Parts extends BaseTimeEntity {
+@Builder
+@Table(name = "part_big_cate")
+public class PartBigCate extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String name;
-    private Long price;
-    private String image;
-    long amount;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mid_cate_id")
-    private PartMidCate midCate;
-
+    @Column(nullable = false, length = 50)
+    private String name;
 }
