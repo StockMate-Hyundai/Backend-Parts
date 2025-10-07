@@ -23,6 +23,7 @@ public enum SuccessStatus {
     PART_DISTRIBUTION_SUCCESS(HttpStatus.OK, "부품 분포 조회 성공"),
     INVENTORY_ANALYSIS_SUCCESS(HttpStatus.OK, "재고 분석 조회 성공"),
     INVENTORY_EXPORT_SUCCESS(HttpStatus.OK, "재고 분석 내보내기 성공"),
+    INVENTORY_DASHBOARD_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리별 재고 비중 조회 성공"),
 
     /**
      * 201

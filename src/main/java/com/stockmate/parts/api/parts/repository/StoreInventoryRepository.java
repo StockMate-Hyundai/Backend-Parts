@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.repository;
 
 import com.stockmate.parts.api.parts.dto.AnalysisRowDto;
+import com.stockmate.parts.api.parts.dto.CategorySumProjection;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface StoreInventoryRepository extends JpaRepository<StoreInventory, Long> {
 
@@ -98,6 +101,22 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
     order by si.updatedAt desc
     """)
     Page<StoreInventory> findUnderLimitByUser(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+  select new com.stockmate.parts.api.parts.dto.CategorySumProjection(
+    bc.id,
+    bc.name,
+    sum(si.amount)
+  )
+  from StoreInventory si
+    join si.part p
+    left join p.midCate mc
+    left join mc.bigCate bc
+  where (:userId is null or si.userId = :userId)
+  group by bc.id, bc.name
+  order by sum(si.amount) desc
+""")
+    List<CategorySumProjection> sumByBigCategory(@Param("userId") Long userId);
 
 }
 
