@@ -29,30 +29,30 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
-    @Operation(summary = "재고조회 API")
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getInventories(
-            @RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Long categoryId
-    ) {
-        var data = inventoryService.getInventories(userId, page, size, categoryId);
-        return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
-    }
+//    @Operation(summary = "재고조회 API")
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getInventories(
+//            @RequestParam Long userId,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "20") int size,
+//            @RequestParam(required = false) Long categoryId
+//    ) {
+//        var data = inventoryService.getInventories(userId, page, size, categoryId);
+//        return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
+//    }
 
-    @Operation(summary = "재고검색 API")
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> searchInventories(
-            @RequestParam Long userId,
-            @RequestParam String keyword,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        var data = inventoryService.searchInventories(userId, keyword, categoryId, page, size);
-        return ApiResponse.success(SuccessStatus.INVENTORY_SEARCH_SUCCESS, data);
-    }
+//    @Operation(summary = "재고검색 API")
+//    @GetMapping("/search")
+//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> searchInventories(
+//            @RequestParam Long userId,
+//            @RequestParam String keyword,
+//            @RequestParam(required = false) Long categoryId,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "20") int size
+//    ) {
+//        var data = inventoryService.searchInventories(userId, keyword, categoryId, page, size);
+//        return ApiResponse.success(SuccessStatus.INVENTORY_SEARCH_SUCCESS, data);
+//    }
 
     @Operation(summary = "부족재고 조회 API")
     @GetMapping("/under-limit")
