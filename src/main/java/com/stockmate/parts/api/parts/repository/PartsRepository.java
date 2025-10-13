@@ -17,6 +17,31 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
     // 3. categoryName으로 검색
     Page<Parts> findByCategoryNameContainingIgnoreCase(String categoryName, Pageable pageable);
 
+    // 4. categoryName + model로 검색
+//    @Query("""
+//    select p
+//    from Parts p
+//    where (:categoryName is null or lower(p.categoryName) like lower(concat('%', :categoryName, '%')))
+//      and (:model is null or lower(p.model) like lower(concat('%', :model, '%')))
+//    """)
+//    Page<Parts> findByCategoryAndModel(
+//            @Param("categoryName") String categoryName,
+//            @Param("model") String model,
+//            Pageable pageable
+//    );
+
+    @Query("""
+        select p
+        from Parts p
+        where (:categoryName is null or :categoryName = '' or lower(p.categoryName) like lower(concat('%', :categoryName, '%')))
+          and (:model is null or :model = '' or lower(p.model) like lower(concat('%', :model, '%')))
+    """)
+    Page<Parts> findByCategoryAndModel(
+            @Param("categoryName") String categoryName,
+            @Param("model") String model,
+            Pageable pageable
+    );
+
     // 4. 이름 + categoryName 동시에 검색
     @Query("""
         select p
