@@ -16,7 +16,8 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
 
     // 본사 특정 부품 총 수량
     @Query("""
-        select sum(si.amount) from StoreInventory si
+        select sum(si.amount) 
+        from StoreInventory si
         where si.part.id = :partId and si.userId = :userId
         """)
     Long sumAmountByPartAndStore(@Param("partId") Long partId,
@@ -56,37 +57,28 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
                                     @Param("q") String q);
 
     // 재고 조회
-    @EntityGraph(attributePaths = {"part", "part.midCate"}, type = EntityGraph.EntityGraphType.LOAD)
+    @EntityGraph(attributePaths = {"part"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("""
     select si
     from StoreInventory si
-      join si.part p
-      left join p.midCate mc
+    join si.part p
     where si.userId = :userId
-      and (:categoryId is null or mc.id = :categoryId)
     order by si.updatedAt desc
     """)
-    Page<StoreInventory> findByUserAndCategory(
-            @Param("userId") Long userId,
-            @Param("categoryId") Long categoryId,
-            Pageable pageable
-    );
+    Page<StoreInventory> findByUser(@Param("userId") Long userId, Pageable pageable);
 
-    // 재고 검색
+    // 지점 재고 검색
     @Query("""
     select si
     from StoreInventory si
     join fetch si.part p
-    left join fetch p.midCate mc
     where si.userId = :userId
       and lower(p.name) like lower(concat('%', :keyword, '%'))
-      and (:categoryId is null or mc.id = :categoryId)
     order by si.updatedAt desc
     """)
-    Page<StoreInventory> findByUserIdAndPart_NameContainingIgnoreCaseAndCategory(
+    Page<StoreInventory> findByUserIdAndPart_NameContainingIgnoreCase(
             @Param("userId") Long userId,
             @Param("keyword") String keyword,
-            @Param("categoryId") Long categoryId,
             Pageable pageable
     );
 
@@ -102,21 +94,20 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
     """)
     Page<StoreInventory> findUnderLimitByUser(@Param("userId") Long userId, Pageable pageable);
 
-    @Query("""
-  select new com.stockmate.parts.api.parts.dto.CategorySumProjection(
-    bc.id,
-    bc.name,
-    sum(si.amount)
-  )
-  from StoreInventory si
-    join si.part p
-    left join p.midCate mc
-    left join mc.bigCate bc
-  where (:userId is null or si.userId = :userId)
-  group by bc.id, bc.name
-  order by sum(si.amount) desc
-""")
-    List<CategorySumProjection> sumByBigCategory(@Param("userId") Long userId);
-
+//    @Query("""
+//      select new com.stockmate.parts.api.parts.dto.CategorySumProjection(
+//        bc.id,
+//        bc.name,
+//        sum(si.amount)
+//      )
+//      from StoreInventory si
+//        join si.part p
+//        left join p.midCate mc
+//        left join mc.bigCate bc
+//      where (:userId is null or si.userId = :userId)
+//      group by bc.id, bc.name
+//      order by sum(si.amount) desc
+//    """)
+//    List<CategorySumProjection> sumByBigCategory(@Param("userId") Long userId);
 }
 

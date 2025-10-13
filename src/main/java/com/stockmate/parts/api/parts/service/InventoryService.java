@@ -34,33 +34,33 @@ public class InventoryService {
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
     private String exportTmpDir = "/tmp/stockmate";
 
-    public PageResponseDto<InventoryItemDto> getInventories(Long userId, int page, int size, Long categoryId) {
-        if (userId == null || userId <= 0)
-            throw new BadRequestException("잘못된 사용자 ID입니다.");
-        if (page < 0 || size <= 0)
-            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-        Page<StoreInventory> result = storeInventoryRepository.findByUserAndCategory(userId, categoryId, pageable);
-        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
-        return PageResponseDto.from(mapped);
-    }
+//    public PageResponseDto<InventoryItemDto> getInventories(Long userId, int page, int size, Long categoryId) {
+//        if (userId == null || userId <= 0)
+//            throw new BadRequestException("잘못된 사용자 ID입니다.");
+//        if (page < 0 || size <= 0)
+//            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+//        Page<StoreInventory> result = storeInventoryRepository.findByUserAndCategory(userId, categoryId, pageable);
+//        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
+//        return PageResponseDto.from(mapped);
+//    }
 
-    public PageResponseDto<InventoryItemDto> searchInventories(Long userId, String keyword, Long categoryId, int page, int size) {
-        if (userId == null || userId <= 0)
-            throw new BadRequestException("잘못된 사용자 ID입니다.");
-        if (page < 0 || size <= 0)
-            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
-        // 검색어가 없으면 전체 재고 조회로 대체
-        if (keyword == null || keyword.isBlank()) {
-            return getInventories(userId, page, size, categoryId);
-        }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-        Page<StoreInventory> result = storeInventoryRepository
-                .findByUserIdAndPart_NameContainingIgnoreCaseAndCategory(userId, keyword, categoryId, pageable);
-
-        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
-        return PageResponseDto.from(mapped);
-    }
+//    public PageResponseDto<InventoryItemDto> searchInventories(Long userId, String keyword, Long categoryId, int page, int size) {
+//        if (userId == null || userId <= 0)
+//            throw new BadRequestException("잘못된 사용자 ID입니다.");
+//        if (page < 0 || size <= 0)
+//            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+//        // 검색어가 없으면 전체 재고 조회로 대체
+//        if (keyword == null || keyword.isBlank()) {
+//            return getInventories(userId, page, size, categoryId);
+//        }
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+//        Page<StoreInventory> result = storeInventoryRepository
+//                .findByUserIdAndPart_NameContainingIgnoreCaseAndCategory(userId, keyword, categoryId, pageable);
+//
+//        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
+//        return PageResponseDto.from(mapped);
+//    }
 
     public PageResponseDto<InventoryItemDto> getUnderLimit(Long userId, int page, int size) {
         if (userId == null || userId <= 0)

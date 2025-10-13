@@ -1,18 +1,38 @@
 package com.stockmate.parts.api.parts.controller;
 
+import com.stockmate.parts.api.parts.dto.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.stockmate.parts.api.parts.service.PartsService;
+import com.stockmate.parts.common.response.ApiResponse;
+import com.stockmate.parts.common.response.SuccessStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@CrossOrigin("*")
+@Tag(name = "Parts", description = "부품 관련 API")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1/parts")
+@RequiredArgsConstructor
 public class PartsController {
+    private final PartsService partsService;
+
+    @Operation(summary = "부품 전체 조회")
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getPartsList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var data = partsService.getAllParts(page, size);
+        return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, (PageResponseDto<PartsDto>) data);
+    }
 
 //    @GetMapping("/parts")
 //    public List<Parts> getParts() {
