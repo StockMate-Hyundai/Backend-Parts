@@ -25,13 +25,14 @@ public class Parts extends BaseTimeEntity {
     private String engName;
     private String categoryName;
     private Integer amount;
+    private String code;
     @ElementCollection
     @CollectionTable(
             name = "part_codes",
             joinColumns = @JoinColumn(name = "part_id")
     )
     @Column(name = "code")
-    private List<String> code;
+    private List<String> code_;
 
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "mid_cate_id")
