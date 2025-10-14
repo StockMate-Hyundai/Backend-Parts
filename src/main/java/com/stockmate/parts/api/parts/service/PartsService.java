@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,7 +32,7 @@ public class PartsService {
 
     // 차 분류, 모델명, 카테고리명 부품 조회
     public PageResponseDto<PartsDto> getModelCategory(
-            String categoryName, String trim, String model, int page, int size
+            List<String> categoryName, List<String> trim, List<String> model, int page, int size
     ) {
         if (page < 0 || size <= 0)
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
