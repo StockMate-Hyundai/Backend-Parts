@@ -21,10 +21,12 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
         select p
         from Parts p
         where (:categoryName is null or :categoryName = '' or lower(p.categoryName) like lower(concat('%', :categoryName, '%')))
+          and (:trim is null or :trim = '' or :trim = p.trim)
           and (:model is null or :model = '' or lower(p.model) like lower(concat('%', :model, '%')))
     """)
     Page<Parts> findByCategoryAndModel(
             @Param("categoryName") String categoryName,
+            @Param("trim") String trim,
             @Param("model") String model,
             Pageable pageable
     );
