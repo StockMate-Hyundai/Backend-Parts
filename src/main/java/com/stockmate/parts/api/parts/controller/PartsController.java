@@ -24,25 +24,26 @@ import java.util.List;
 public class PartsController {
     private final PartsService partsService;
 
-//    @Operation(summary = "부품 전체 조회")
-//    @GetMapping("/list")
-//    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getPartsList(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        var data = partsService.getAllParts(page, size);
-//        return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
-//    }
+    @Operation(summary = "부품 전체 조회")
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getPartsList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var data = partsService.getAllParts(page, size);
+        return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
+    }
 
     @Operation(summary = "모델명, 카테고리명으로 부품 조회")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getSearchList(
-            @RequestParam(required = false) String categoryName,
-            @RequestParam(required = false) String model,
+            @RequestParam(required = false) List<String> categoryName,
+            @RequestParam(required = false) List<String> trim,
+            @RequestParam(required = false) List<String> model,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        var data = partsService.getModelCategory(categoryName, model, page, size);
+        var data = partsService.getModelCategory(categoryName, trim, model, page, size);
         return ApiResponse.success(SuccessStatus.PARTS_MODEL_CATEGORY_SUCCESS, data);
     }
 
