@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PartsRepository extends JpaRepository<Parts, Long> {
@@ -18,16 +19,17 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
 
     // categoryName + model로 검색, 없으면 전체 검색
     @Query("""
-        select p
-        from Parts p
-        where (:categoryName is null or :categoryName = '' or lower(p.categoryName) like lower(concat('%', :categoryName, '%')))
-          and (:trim is null or :trim = '' or :trim = p.trim)
-          and (:model is null or :model = '' or lower(p.model) like lower(concat('%', :model, '%')))
+    select p
+    from Parts p
+    where 
+        (:categoryNames is null or p.categoryName in :categoryNames)
+        and (:trims is null or p.trim in :trims)
+        and (:models is null or p.model in :models)
     """)
     Page<Parts> findByCategoryAndModel(
-            @Param("categoryName") String categoryName,
-            @Param("trim") String trim,
-            @Param("model") String model,
+            @Param("categoryNames") List<String> categoryNames,
+            @Param("trims") List<String> trims,
+            @Param("models") List<String> models,
             Pageable pageable
     );
 

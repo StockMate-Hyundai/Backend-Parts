@@ -37,9 +37,9 @@ public class PartsController {
     @Operation(summary = "모델명, 카테고리명으로 부품 조회")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getSearchList(
-            @RequestParam(required = false) String categoryName,
-            @RequestParam(required = false) String trim,
-            @RequestParam(required = false) String model,
+            @RequestParam(required = false) List<String> categoryName,
+            @RequestParam(required = false) List<String> trim,
+            @RequestParam(required = false) List<String> model,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
