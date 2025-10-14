@@ -39,4 +39,17 @@ public class PartsService {
         Page<PartsDto> mapped = result.map(PartsDto::of);
         return PageResponseDto.from(mapped);
     }
+
+    // id로 조회
+//    public PartsDto getParts(Long id) {}
+
+    // 부족 재고 조회
+    public PageResponseDto<PartsDto> getLackStock(
+            int amount, int page, int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Parts> result = partsRepository.findByAmountLessThanEqual(amount, pageable);
+        Page<PartsDto> mapped = result.map(PartsDto::of);
+        return PageResponseDto.from(mapped);
+    }
 }

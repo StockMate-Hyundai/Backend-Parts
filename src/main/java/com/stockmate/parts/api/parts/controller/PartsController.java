@@ -46,6 +46,17 @@ public class PartsController {
         return ApiResponse.success(SuccessStatus.PARTS_MODEL_CATEGORY_SUCCESS, data);
     }
 
+    @Operation(summary = "부족 재고 조회")
+    @GetMapping("/lack")
+    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getLackStock(
+            @RequestParam(required = false, defaultValue = "5") int amount,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var data = partsService.getLackStock(amount, page, size);
+        return ApiResponse.success(SuccessStatus.PARTS_LACK_STOCK, data);
+    }
+
 //    @GetMapping("/parts")
 //    public List<Parts> getParts() {
 //
