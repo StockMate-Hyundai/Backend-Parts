@@ -94,6 +94,10 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
     """)
     Page<StoreInventory> findUnderLimitByUser(@Param("userId") Long userId, Pageable pageable);
 
+    // 발주 가능 여부
+    @Query("select p.amount from Parts p where p.id = :id")
+    Integer findAmountByPartId(@Param("id") Long id);
+
 //    @Query("""
 //      select new com.stockmate.parts.api.parts.dto.CategorySumProjection(
 //        bc.id,
