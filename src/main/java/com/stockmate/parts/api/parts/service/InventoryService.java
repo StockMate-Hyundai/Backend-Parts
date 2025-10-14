@@ -4,6 +4,7 @@ import com.stockmate.parts.api.parts.dto.AnalysisRowDto;
 import com.stockmate.parts.api.parts.dto.InventoryItemDto;
 import com.stockmate.parts.api.parts.dto.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.PartsDistributionDto;
+import com.stockmate.parts.api.parts.dto.store.StockCheckResponseDto;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import com.stockmate.parts.api.parts.repository.StoreInventoryRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
@@ -25,10 +26,19 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
-
     private final StoreInventoryRepository storeInventoryRepository;
 
-//    @Value("${stockmate.hq-user-id:1}")
+    // 발주 가능 여부
+    public StockCheckResponseDto checkStock(Long partId, Integer amount) {
+        Integer stock = storeInventoryRepository.findAmountByPartId(partId);
+        return StockCheckResponseDto.builder()
+                .partId(partId)
+                .stock(stock)
+                .canOrder(stock < amount ? false : true)
+                .build();
+    }
+
+    //    @Value("${stockmate.hq-user-id:1}")
     private Long hqUserId  = 1L;
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
