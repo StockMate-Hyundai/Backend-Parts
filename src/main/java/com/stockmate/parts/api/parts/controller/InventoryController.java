@@ -4,6 +4,7 @@ import com.stockmate.parts.api.parts.dto.AnalysisRowDto;
 import com.stockmate.parts.api.parts.dto.InventoryItemDto;
 import com.stockmate.parts.api.parts.dto.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.PartsDistributionDto;
+import com.stockmate.parts.api.parts.dto.store.StockCheckResponseDto;
 import com.stockmate.parts.api.parts.service.InventoryService;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +70,16 @@ public class InventoryController {
     public ResponseEntity<ApiResponse<PartsDistributionDto>> getPartDistribution(@PathVariable Long partId) {
         var body = inventoryService.getPartDistribution(partId);
         return ApiResponse.success(SuccessStatus.PART_DISTRIBUTION_SUCCESS, body);
+    }
+
+    @Operation(summary = "주문 가능 여부 조회")
+    @GetMapping("/check")
+    public ResponseEntity<ApiResponse<StockCheckResponseDto>> checkStock(
+            @RequestParam Long partId,
+            @RequestParam Integer amount
+    ) {
+        var body = inventoryService.checkStock(partId, amount);
+        return ApiResponse.success(SuccessStatus.INVENTORY_STOCK_CHECK_SUCCESS, body);
     }
 
     @Operation(summary = "전사 재고 분석-임시 API")
