@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.OrderCheckDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
 import com.stockmate.parts.api.parts.dto.parts.PartsDto;
@@ -61,9 +62,10 @@ public class PartsService {
     }
 
     // 발주 가능 여부
-    public List<OrderCheckResponseDto> checkStock(List<OrderCheckReqDto> requests) {
+    public OrderCheckResponseDto checkStock(List<OrderCheckReqDto> requests) {
         log.info("==> [checkStock] 발주 가능 여부 확인 요청 시작 | 요청 수: {}", requests.size());
-        List<OrderCheckResponseDto> responses = new ArrayList<>();
+        List<OrderCheckDto> orders = new ArrayList<>();
+        int totalAmount = 0;
 
         for (OrderCheckReqDto req : requests) {
             log.debug(">> 요청 데이터: partId={}, amount={}", req.getPartId(), req.getAmount());
@@ -87,11 +89,11 @@ public class PartsService {
 
             Integer stock = part.getAmount();
             boolean canOrder = stock != null && stock >= req.getAmount();
-
+            totalAmount += req.getAmount() * Integer.parseInt(String.valueOf(part.getPrice()));
             log.info("[checkStock] partId={}, stock={}, requested={}, canOrder={}",
                     req.getPartId(), stock, req.getAmount(), canOrder);
 
-            responses.add(OrderCheckResponseDto.builder()
+            orders.add(OrderCheckDto.builder()
                     .partId(req.getPartId())
                     .requestedAmount(req.getAmount())
                     .availableStock(stock != null ? stock : 0)
@@ -99,7 +101,13 @@ public class PartsService {
                     .build());
         }
 
-        log.info("<== [checkStock] 발주 가능 여부 확인 완료 | 결과 개수: {}", responses.size());
+        log.info("<== [checkStock] 발주 가능 여부 확인 완료 | 결과 개수: {}", orders.size());
+
+        OrderCheckResponseDto responses = OrderCheckResponseDto.builder()
+                .orderList(orders)
+                .totalPrice(totalAmount)
+                .build();
+
         return responses;
     }
 }

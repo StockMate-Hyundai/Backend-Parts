@@ -2,14 +2,14 @@ package com.stockmate.parts.api.parts.dto.parts;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class OrderCheckResponseDto {
-    private Long partId;
-    private Integer requestedAmount;
-    private Integer availableStock;
-    private Boolean canOrder;
+    private List<OrderCheckDto> orderList;
+    private Integer totalPrice;
 }
