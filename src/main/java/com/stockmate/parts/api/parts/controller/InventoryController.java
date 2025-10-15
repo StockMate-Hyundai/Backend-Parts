@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.controller;
 
-import com.stockmate.parts.api.parts.dto.*;
+import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.service.InventoryService;
 import com.stockmate.parts.common.config.swagger.security.SecurityUser;
 import com.stockmate.parts.common.response.ApiResponse;
@@ -68,15 +69,6 @@ public class InventoryController {
 //        return ApiResponse.success(SuccessStatus.PART_DISTRIBUTION_SUCCESS, body);
 //    }
 //
-//    @Operation(summary = "주문 가능 여부 조회")
-//    @GetMapping("/check")
-//    public ResponseEntity<ApiResponse<StockCheckResponseDto>> checkStock(
-//            @RequestParam Long partId,
-//            @RequestParam Integer amount
-//    ) {
-//        var body = inventoryService.checkStock(partId, amount);
-//        return ApiResponse.success(SuccessStatus.INVENTORY_STOCK_CHECK_SUCCESS, body);
-//    }
 //
 //    @Operation(summary = "전사 재고 분석-임시 API")
 //    @GetMapping("/analysis")

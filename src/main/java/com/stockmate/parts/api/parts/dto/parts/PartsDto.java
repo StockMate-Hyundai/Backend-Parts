@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.parts;
 
 import com.stockmate.parts.api.parts.entity.Parts;
 import lombok.AllArgsConstructor;
