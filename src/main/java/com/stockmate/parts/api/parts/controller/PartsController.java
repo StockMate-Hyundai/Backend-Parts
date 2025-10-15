@@ -2,19 +2,15 @@ package com.stockmate.parts.api.parts.controller;
 
 import com.stockmate.parts.api.parts.dto.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.PartsDto;
-import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.service.PartsService;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Tag(name = "Parts", description = "부품 관련 API")
@@ -34,7 +30,7 @@ public class PartsController {
         return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
     }
 
-    @Operation(summary = "모델명, 카테고리명으로 부품 조회")
+    @Operation(summary = "부품 검색")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getSearchList(
             @RequestParam(required = false) List<String> categoryName,
@@ -57,15 +53,4 @@ public class PartsController {
         var data = partsService.getLackStock(amount, page, size);
         return ApiResponse.success(SuccessStatus.PARTS_LACK_STOCK, data);
     }
-
-//    @GetMapping("/parts")
-//    public List<Parts> getParts() {
-//
-//        ArrayList<Parts> parts = new ArrayList<>();
-//        parts.add(new Parts(1L,"자동차바퀴",23));
-//        parts.add(new Parts(2L,"자동차 엔진",50));
-//        parts.add(new Parts(3L,"자동차 쇼바",40));
-//
-//        return parts;
-//    }
 }

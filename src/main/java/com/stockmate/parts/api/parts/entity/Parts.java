@@ -33,8 +33,4 @@ public class Parts extends BaseTimeEntity {
     )
     @Column(name = "code")
     private List<String> code_;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "mid_cate_id")
-//    private PartMidCate midCate;
 }
