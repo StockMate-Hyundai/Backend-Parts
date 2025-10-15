@@ -1,7 +1,9 @@
 package com.stockmate.parts.api.parts.service;
 
-import com.stockmate.parts.api.parts.dto.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.PartsDto;
+import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
+import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -53,5 +56,21 @@ public class PartsService {
         Page<Parts> result = partsRepository.findByAmountLessThanEqual(amount, pageable);
         Page<PartsDto> mapped = result.map(PartsDto::of);
         return PageResponseDto.from(mapped);
+    }
+
+    // 발주 가능 여부
+    public List<OrderCheckResponseDto> checkStock(List<OrderCheckReqDto> requests) {
+        List<OrderCheckResponseDto> responses = new ArrayList<>();
+
+        for (OrderCheckReqDto req : requests) {
+            Integer stock = partsRepository.findById(req.getPartId()).get().getAmount();
+            responses.add(OrderCheckResponseDto.builder()
+                    .partId(req.getPartId())
+                    .requestedAmount(req.getAmount())
+                    .availableStock(stock != null ? stock : 0)
+                    .canOrder(stock > req.getAmount() ? true : false)
+                    .build());
+        }
+        return responses;
     }
 }

@@ -1,7 +1,9 @@
 package com.stockmate.parts.api.parts.controller;
 
-import com.stockmate.parts.api.parts.dto.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.PartsDto;
+import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
+import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.service.PartsService;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
@@ -52,5 +54,14 @@ public class PartsController {
     ) {
         var data = partsService.getLackStock(amount, page, size);
         return ApiResponse.success(SuccessStatus.PARTS_LACK_STOCK, data);
+    }
+
+    @Operation(summary = "주문 가능 여부 확인")
+    @PostMapping("/check")
+    public ResponseEntity<ApiResponse<List<OrderCheckResponseDto>>> checkStock(
+            @RequestBody List<OrderCheckReqDto> requests
+    ) {
+        var data = partsService.checkStock(requests);
+        return ApiResponse.success(SuccessStatus.PARTS_STOCK_CHECK_SUCCESS, data);
     }
 }
