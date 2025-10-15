@@ -1,8 +1,8 @@
 package com.stockmate.parts.api.parts.controller;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.PartsDto;
-import com.stockmate.parts.api.parts.service.InventoryService;
+import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
+import com.stockmate.parts.api.parts.service.StoreService;
 import com.stockmate.parts.common.config.swagger.security.SecurityUser;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
@@ -19,48 +19,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/store")
 @RequiredArgsConstructor
-public class InventoryController {
+public class StoreController {
 
-    private final InventoryService inventoryService;
+    private final StoreService storeService;
 
     @Operation(summary = "지점 재고조회")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getInventories(
+    public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getInventories(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> categoryName,
             @RequestParam(required = false) List<String> trim,
             @RequestParam(required = false) List<String> model,
             @AuthenticationPrincipal SecurityUser securityUser
     ) {
         long userId = securityUser.getMemberId();
-        var data = inventoryService.searchParts(userId, categoryName, trim, model, page, size);
+        var data = storeService.searchParts(userId, categoryName, trim, model, page, size);
         return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
     }
 
-//    @Operation(summary = "재고검색 API")
-//    @GetMapping("/search")
-//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> searchInventories(
-//            @RequestParam Long userId,
-//            @RequestParam String keyword,
-//            @RequestParam(required = false) Long categoryId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        var data = inventoryService.searchInventories(userId, keyword, categoryId, page, size);
-//        return ApiResponse.success(SuccessStatus.INVENTORY_SEARCH_SUCCESS, data);
-//    }
-
-//    @Operation(summary = "부족재고 조회 API")
-//    @GetMapping("/under-limit")
-//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getUnderLimitInventories(
-//            @RequestParam Long userId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        var data = inventoryService.getUnderLimit(userId, page, size);
-//        return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
-//    }
+    @Operation(summary = "카테고리별 부족재고 조회")
+    @GetMapping("/under-limit")
+    public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getUnderLimitInventories(
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+        long userId = securityUser.getMemberId();
+        var data = storeService.getUnderLimit(userId, categoryName, page, size);
+        return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
+    }
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
 //    @GetMapping("/parts/{partId}")

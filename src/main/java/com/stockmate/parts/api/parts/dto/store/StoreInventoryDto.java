@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.store;
 
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
@@ -11,20 +11,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InventoryItemDto {
+public class StoreInventoryDto {
     private Long partId;
     private String partName;
     private String image;
     private Long price;
-    private Long amount;
-    private Long limitAmount;
+    private Integer amount;
+    private Integer limitAmount;
     private Boolean underLimit;
     private LocalDateTime updatedAt;
 
-    public static InventoryItemDto of(StoreInventory si) {
+    public static StoreInventoryDto of(StoreInventory si) {
         Parts p = si.getPart();
         boolean under = si.getLimitAmount() != null && si.getAmount() < si.getLimitAmount();
-        return InventoryItemDto.builder()
+        return StoreInventoryDto.builder()
                 .partId(p.getId())
                 .partName(p.getName())
                 .image(p.getImage())

@@ -16,10 +16,10 @@ public class StoreInventory extends BaseTimeEntity {
     private Long id;
 
     @Column(nullable = false)
-    private Long amount;       // 현재 수량
+    private Integer amount;       // 현재 수량
 
     @Column(name = "limit_amount")
-    private Long limitAmount;  // 최소 필요 수량(부족 판단 기준)
+    private Integer limitAmount;  // 최소 필요 수량(부족 판단 기준)
 
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "part_id", nullable = false)
     private Parts part;

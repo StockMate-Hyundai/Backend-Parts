@@ -8,6 +8,7 @@ import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,18 @@ import java.util.List;
 @Slf4j
 public class PartsService {
     private final PartsRepository partsRepository;
+
+    // 상세 부품 조회
+    public PartsDto getPartDetail(Long partId) {
+        log.info("[부품 상세 조회 요청] partId = {}", partId);
+        Parts result = partsRepository.findById(partId)
+                .orElseThrow(() -> {
+                    log.warn("[부품 조회 실패] 존재하지 않는 ID: {}", partId);
+                    return new EntityNotFoundException("해당 부품이 존재하지 않습니다. ID=" + partId);
+                });
+        log.info("[부품 조회 성공] partId = {}, name = {}", result.getId(), result.getName());
+        return PartsDto.of(result);
+    }
 
     // 전체 부품 조회
     public PageResponseDto<PartsDto> getAllParts(int page, int size) {

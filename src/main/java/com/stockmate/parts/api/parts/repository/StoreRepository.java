@@ -1,6 +1,6 @@
 package com.stockmate.parts.api.parts.repository;
 
-import com.stockmate.parts.api.parts.entity.Parts;
+import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,25 +10,41 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-public interface StoreInventoryRepository extends JpaRepository<StoreInventory, Long> {
+public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
 
     // 지점 부품 검색
     @Query("""
-    select p
-    from StoreInventory si
-    join si.part p
-    where si.userId = :userId
-        and (:categoryNames is null or p.categoryName in :categoryNames)
-        and (:trims is null or p.trim in :trims)
-        and (:models is null or p.model in :models)
+        select p, si, CASE WHEN si.amount < si.limitAmount Then true ELSE false END
+        from StoreInventory si
+        join si.part p
+        where si.userId = :userId
+            and (:categoryNames is null or p.categoryName in :categoryNames)
+            and (:trims is null or p.trim in :trims)
+            and (:models is null or p.model in :models)
     """)
-    Page<Parts> searchParts(
-            @Param("userId") Long userId,
-            @Param("categoryNames") List<String> categoryNames,
-            @Param("trims") List<String> trims,
-            @Param("models") List<String> models,
+    Page<Object[]> searchParts(
+            Long userId,
+            List<String> categoryNames,
+            List<String> trims,
+            List<String> models,
             Pageable pageable
     );
+
+    // 카테고리별 부족 재고 조회
+    @Query("""
+        select p, si, CASE WHEN si.amount < si.limitAmount Then true ELSE false END
+        from StoreInventory si
+        join si.part p
+        where si.userId = :userId
+            and si.amount < si.limitAmount
+            and (:categoryName is null or :categoryName = '' or p.categoryName = :categoryName)
+    """)
+    Page<Object[]> findUnderLimitByCategory(
+            Long userId,
+            String categoryName,
+            Pageable pageable
+    );
+
     // 본사 특정 부품 총 수량
 //    @Query("""
 //        select sum(si.amount)
@@ -71,49 +87,10 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
 //    Page<AnalysisRowDto> analyzeAll(Pageable pageable,
 //                                    @Param("q") String q);
 //
-//    // 재고 조회
-//    @EntityGraph(attributePaths = {"part"}, type = EntityGraph.EntityGraphType.LOAD)
-//    @Query("""
-//    select si
-//    from StoreInventory si
-//    join si.part p
-//    where si.userId = :userId
-//    order by si.updatedAt desc
-//    """)
-//    Page<StoreInventory> findByUser(@Param("userId") Long userId, Pageable pageable);
-//
-//    // 지점 재고 검색
-//    @Query("""
-//    select si
-//    from StoreInventory si
-//    join fetch si.part p
-//    where si.userId = :userId
-//      and lower(p.name) like lower(concat('%', :keyword, '%'))
-//    order by si.updatedAt desc
-//    """)
-//    Page<StoreInventory> findByUserIdAndPart_NameContainingIgnoreCase(
-//            @Param("userId") Long userId,
-//            @Param("keyword") String keyword,
-//            Pageable pageable
-//    );
-//
-//    // 부족 재고
-//    @EntityGraph(attributePaths = {"part"}, type = EntityGraph.EntityGraphType.LOAD)
-//    @Query("""
-//    select si
-//    from StoreInventory si
-//    where si.userId = :userId
-//      and si.limitAmount is not null
-//      and si.amount < si.limitAmount
-//    order by si.updatedAt desc
-//    """)
-//    Page<StoreInventory> findUnderLimitByUser(@Param("userId") Long userId, Pageable pageable);
 //
 //    // 발주 가능 여부
 //    @Query("select p.amount from Parts p where p.id = :id")
 //    Integer findAmountByPartId(@Param("id") Long id);
-
-
 
 //    @Query("""
 //      select new com.stockmate.parts.api.parts.dto.CategorySumProjection(

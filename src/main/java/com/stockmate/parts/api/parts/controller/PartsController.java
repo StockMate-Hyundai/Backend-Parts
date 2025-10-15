@@ -22,6 +22,15 @@ import java.util.List;
 public class PartsController {
     private final PartsService partsService;
 
+    @Operation(summary = "부품 상세 조회")
+    @GetMapping("/detail/{partId}")
+    public ResponseEntity<ApiResponse<PartsDto>> getPartDetail(
+            @PathVariable Long partId
+    ) {
+        var data = partsService.getPartDetail(partId);
+        return ApiResponse.success(SuccessStatus.PARTS_DETAIL_SUCCESS, data);
+    }
+
     @Operation(summary = "부품 전체 조회")
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getPartsList(
