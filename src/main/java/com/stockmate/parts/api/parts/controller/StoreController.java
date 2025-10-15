@@ -27,7 +27,7 @@ public class StoreController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getInventories(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> categoryName,
             @RequestParam(required = false) List<String> trim,
             @RequestParam(required = false) List<String> model,
@@ -38,29 +38,18 @@ public class StoreController {
         return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
     }
 
-//    @Operation(summary = "재고검색 API")
-//    @GetMapping("/search")
-//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> searchInventories(
-//            @RequestParam Long userId,
-//            @RequestParam String keyword,
-//            @RequestParam(required = false) Long categoryId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        var data = inventoryService.searchInventories(userId, keyword, categoryId, page, size);
-//        return ApiResponse.success(SuccessStatus.INVENTORY_SEARCH_SUCCESS, data);
-//    }
-
-//    @Operation(summary = "부족재고 조회 API")
-//    @GetMapping("/under-limit")
-//    public ResponseEntity<ApiResponse<PageResponseDto<InventoryItemDto>>> getUnderLimitInventories(
-//            @RequestParam Long userId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        var data = inventoryService.getUnderLimit(userId, page, size);
-//        return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
-//    }
+    @Operation(summary = "카테고리별 부족재고 조회")
+    @GetMapping("/under-limit")
+    public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getUnderLimitInventories(
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+        long userId = securityUser.getMemberId();
+        var data = storeService.getUnderLimit(userId, categoryName, page, size);
+        return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
+    }
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
 //    @GetMapping("/parts/{partId}")
