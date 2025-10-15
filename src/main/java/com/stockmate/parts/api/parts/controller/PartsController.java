@@ -58,7 +58,7 @@ public class PartsController {
 
     @Operation(summary = "주문 가능 여부 확인")
     @PostMapping("/check")
-    public ResponseEntity<ApiResponse<List<OrderCheckResponseDto>>> checkStock(
+    public ResponseEntity<ApiResponse<OrderCheckResponseDto>> checkStock(
             @RequestBody List<OrderCheckReqDto> requests
     ) {
         var data = partsService.checkStock(requests);
