@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.service;
 
-import com.stockmate.parts.api.parts.dto.*;
+import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.StoreInventoryRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
@@ -27,16 +28,6 @@ public class InventoryService {
         Page<PartsDto> mapped = result.map(PartsDto::of);
         return PageResponseDto.from(mapped);
     }
-
-    // 발주 가능 여부
-//    public StockCheckResponseDto checkStock(Long partId, Integer amount) {
-//        Integer stock = storeInventoryRepository.findAmountByPartId(partId);
-//        return StockCheckResponseDto.builder()
-//                .partId(partId)
-//                .stock(stock)
-//                .canOrder(stock < amount ? false : true)
-//                .build();
-//    }
 
     //    @Value("${stockmate.hq-user-id:1}")
 //    private Long hqUserId  = 1L;

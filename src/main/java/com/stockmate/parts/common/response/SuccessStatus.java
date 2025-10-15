@@ -24,7 +24,7 @@ public enum SuccessStatus {
     INVENTORY_ANALYSIS_SUCCESS(HttpStatus.OK, "재고 분석 조회 성공"),
     INVENTORY_EXPORT_SUCCESS(HttpStatus.OK, "재고 분석 내보내기 성공"),
     INVENTORY_DASHBOARD_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리별 재고 비중 조회 성공"),
-    INVENTORY_STOCK_CHECK_SUCCESS(HttpStatus.OK, "주문 가능 여부 조회 성공"),
+    PARTS_STOCK_CHECK_SUCCESS(HttpStatus.OK, "주문 가능 여부 조회 성공"),
     PARTS_LIST_SUCCESS(HttpStatus.OK, "부품 목록 조회 성공"),
     PARTS_MODEL_CATEGORY_SUCCESS(HttpStatus.OK, "부품 검색 성공"),
     PARTS_LACK_STOCK(HttpStatus.OK, "부족 재고 조회 성공"),

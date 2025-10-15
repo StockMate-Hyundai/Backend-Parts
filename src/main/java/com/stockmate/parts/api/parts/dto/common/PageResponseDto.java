@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.common;
 
 import lombok.*;
 import org.springframework.data.domain.Page;
