@@ -1,9 +1,10 @@
 package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.PartsDto;
+import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
-import com.stockmate.parts.api.parts.repository.StoreInventoryRepository;
+import com.stockmate.parts.api.parts.entity.StoreInventory;
+import com.stockmate.parts.api.parts.repository.StoreRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,17 +16,23 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class InventoryService {
-    private final StoreInventoryRepository storeInventoryRepository;
+public class StoreService {
+    private final StoreRepository storeRepository;
 
-    public PageResponseDto<PartsDto> searchParts(Long userId, List<String> categoryName, List<String> trim, List<String> model, int page, int size) {
+    public PageResponseDto<StorePartsDto> searchParts(Long userId, List<String> categoryName, List<String> trim, List<String> model, int page, int size) {
         if (userId == null || userId <= 0)
             throw new BadRequestException("잘못된 사용자 ID입니다.");
         if (page < 0 || size <= 0)
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
         Pageable pageable = PageRequest.of(page, size);
-        Page<Parts> result = storeInventoryRepository.searchParts(userId, categoryName, trim, model, pageable);
-        Page<PartsDto> mapped = result.map(PartsDto::of);
+
+        Page<Object[]> result = storeRepository.searchParts(userId, categoryName, trim, model, pageable);
+        Page<StorePartsDto> mapped = result.map(row -> {
+                    Parts part = (Parts) row[0];
+                    StoreInventory storeInventory = (StoreInventory) row[1];
+                    Boolean isLack = row[2] == null ? false : (Boolean) row[2];
+                    return StorePartsDto.of(part, storeInventory, isLack);
+        });
         return PageResponseDto.from(mapped);
     }
 

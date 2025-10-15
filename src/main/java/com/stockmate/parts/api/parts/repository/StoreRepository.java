@@ -1,6 +1,5 @@
 package com.stockmate.parts.api.parts.repository;
 
-import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,11 +9,11 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-public interface StoreInventoryRepository extends JpaRepository<StoreInventory, Long> {
+public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
 
     // 지점 부품 검색
     @Query("""
-    select p
+    select p, si, CASE WHEN si.amount < si.limitAmount Then true ELSE false END
     from StoreInventory si
     join si.part p
     where si.userId = :userId
@@ -22,7 +21,7 @@ public interface StoreInventoryRepository extends JpaRepository<StoreInventory, 
         and (:trims is null or p.trim in :trims)
         and (:models is null or p.model in :models)
     """)
-    Page<Parts> searchParts(
+    Page<Object[]> searchParts(
             @Param("userId") Long userId,
             @Param("categoryNames") List<String> categoryNames,
             @Param("trims") List<String> trims,
