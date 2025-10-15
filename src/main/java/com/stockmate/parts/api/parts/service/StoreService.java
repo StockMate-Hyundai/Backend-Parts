@@ -7,6 +7,7 @@ import com.stockmate.parts.api.parts.entity.StoreInventory;
 import com.stockmate.parts.api.parts.repository.StoreRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,73 +15,76 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StoreService {
     private final StoreRepository storeRepository;
 
-    public PageResponseDto<StorePartsDto> searchParts(Long userId, List<String> categoryName, List<String> trim, List<String> model, int page, int size) {
-        if (userId == null || userId <= 0)
+    public PageResponseDto<StorePartsDto> searchParts(
+            Long userId, List<String> categoryName, List<String> trim, List<String> model,
+            int page, int size
+    ) {
+        log.info("[StoreService] 🔍 지점 부품 조회 시작 | userId={}, page={}, size={}, categoryName={}, trim={}, model={}",
+                userId, page, size, categoryName, trim, model);
+
+        if (userId == null || userId <= 0) {
+            log.error("[StoreService] ❌ 잘못된 사용자 ID: {}", userId);
             throw new BadRequestException("잘못된 사용자 ID입니다.");
-        if (page < 0 || size <= 0)
+        }
+        if (page < 0 || size <= 0) {
+            log.error("[StoreService] ❌ 잘못된 페이지 요청 | page={}, size={}", page, size);
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+        }
+
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Object[]> result = storeRepository.searchParts(userId, categoryName, trim, model, pageable);
+        log.info("[StoreService] ✅ 검색 결과 조회 완료 | totalElements={}, totalPages={}",
+                result.getTotalElements(), result.getTotalPages());
+
         Page<StorePartsDto> mapped = result.map(row -> {
-                    Parts part = (Parts) row[0];
-                    StoreInventory storeInventory = (StoreInventory) row[1];
-                    Boolean isLack = row[2] == null ? false : (Boolean) row[2];
-                    return StorePartsDto.of(part, storeInventory, isLack);
+            Parts part = (Parts) row[0];
+            StoreInventory storeInventory = (StoreInventory) row[1];
+            Boolean isLack = row[2] == null ? false : (Boolean) row[2];
+            return StorePartsDto.of(part, storeInventory, isLack);
         });
+
+        log.info("[StoreService] 🏁 searchParts() 종료");
         return PageResponseDto.from(mapped);
     }
 
-    //    @Value("${stockmate.hq-user-id:1}")
-//    private Long hqUserId  = 1L;
+    // 카테고리별 부족 재고 조회
+    public PageResponseDto<StorePartsDto> getUnderLimit(Long userId, String categoryName, int page, int size) {
+        log.info("[StoreService] 🔍 부족 재고 조회 시작 | userId={}, categoryName={}, page={}, size={}",
+                userId, categoryName, page, size);
+
+        if (userId == null || userId <= 0) {
+            log.error("[StoreService] ❌ 잘못된 사용자 ID: {}", userId);
+            throw new BadRequestException("잘못된 사용자 ID입니다.");
+        }
+        if (page < 0 || size <= 0) {
+            log.error("[StoreService] ❌ 잘못된 페이지 요청 | page={}, size={}", page, size);
+            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Object[]> result = storeRepository.findUnderLimitByCategory(userId, categoryName, pageable);
+        Page<StorePartsDto> mapped = result.map(row -> {
+            Parts part = (Parts) row[0];
+            StoreInventory storeInventory = (StoreInventory) row[1];
+            Boolean isLack = row[2] == null ? false : (Boolean) row[2];
+            return StorePartsDto.of(part, storeInventory, isLack);
+        });
+
+        log.info("[StoreService] 🏁 getUnderLimit() 종료");
+        return PageResponseDto.from(mapped);
+    }
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
 //    private String exportTmpDir = "/tmp/stockmate";
 
-//    public PageResponseDto<InventoryItemDto> getInventories(Long userId, int page, int size, Long categoryId) {
-//        if (userId == null || userId <= 0)
-//            throw new BadRequestException("잘못된 사용자 ID입니다.");
-//        if (page < 0 || size <= 0)
-//            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-//        Page<StoreInventory> result = storeInventoryRepository.findByUserAndCategory(userId, categoryId, pageable);
-//        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
-//        return PageResponseDto.from(mapped);
-//    }
-
-//    public PageResponseDto<InventoryItemDto> searchInventories(Long userId, String keyword, Long categoryId, int page, int size) {
-//        if (userId == null || userId <= 0)
-//            throw new BadRequestException("잘못된 사용자 ID입니다.");
-//        if (page < 0 || size <= 0)
-//            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
-//        // 검색어가 없으면 전체 재고 조회로 대체
-//        if (keyword == null || keyword.isBlank()) {
-//            return getInventories(userId, page, size, categoryId);
-//        }
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-//        Page<StoreInventory> result = storeInventoryRepository
-//                .findByUserIdAndPart_NameContainingIgnoreCaseAndCategory(userId, keyword, categoryId, pageable);
-//
-//        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
-//        return PageResponseDto.from(mapped);
-//    }
-
-//    public PageResponseDto<InventoryItemDto> getUnderLimit(Long userId, int page, int size) {
-//        if (userId == null || userId <= 0)
-//            throw new BadRequestException("잘못된 사용자 ID입니다.");
-//        if (page < 0 || size <= 0)
-//            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-//        Page<StoreInventory> result = storeInventoryRepository.findUnderLimitByUser(userId, pageable);
-//        Page<InventoryItemDto> mapped = result.map(InventoryItemDto::of);
-//        return PageResponseDto.from(mapped);
-//    }
-//
 //    public PartsDistributionDto getPartDistribution(Long partId) {
 //        Long hqAmount = storeInventoryRepository.sumAmountByPartAndStore(partId, hqUserId);
 //        long underLimitCnt = storeInventoryRepository.countStoresUnderLimit(partId);
