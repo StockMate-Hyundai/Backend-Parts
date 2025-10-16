@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.store.CategoryLackCountDto;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
@@ -75,12 +76,29 @@ public class StoreService {
             Parts part = (Parts) row[0];
             StoreInventory storeInventory = (StoreInventory) row[1];
             Boolean isLack = row[2] == null ? false : (Boolean) row[2];
+            log.info("storeInventory : {}, isLack : {]", storeInventory, isLack);
             return StorePartsDto.of(part, storeInventory, isLack);
         });
 
         log.info("[StoreService] 🏁 getUnderLimit() 종료");
         return PageResponseDto.from(mapped);
     }
+
+    // 카테고리별 부족 제품 갯수
+    public List<CategoryLackCountDto> getCategoryLackCount(Long userId) {
+        log.info("[StoreService] 🔍 카테고리별 부족 재고 수 조회 시작 | userId={}", userId);
+
+        if (userId == null || userId <= 0) {
+            log.error("[StoreService] ❌ 잘못된 사용자 ID: {}", userId);
+            throw new BadRequestException("잘못된 사용자 ID입니다.");
+        }
+
+        List<Object[]> result = storeRepository.countLackPartsByCategory(userId);
+
+        log.info("[StoreService] ✅ 카테고리별 부족 재고 수 조회 완료 | totalCategories={}", result.size());
+        return result.stream()
+                .map(row -> new CategoryLackCountDto((String) row[0], ((Long) row[1]).intValue()))
+                .toList();    }
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
 //    private String exportTmpDir = "/tmp/stockmate";
