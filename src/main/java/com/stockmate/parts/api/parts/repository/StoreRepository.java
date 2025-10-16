@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
 
@@ -67,6 +68,9 @@ public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
             String name,
             Pageable pageable
     );
+
+    // 최소 필요 수량 변경
+    Optional<StoreInventory> findStoreInventoryByUserIdAndPartId(Long userId, Long partId);
 
 //    // 특정 부품이 부족재고인 지점 개수
 //    @Query("""
