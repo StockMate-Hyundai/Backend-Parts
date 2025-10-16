@@ -75,8 +75,7 @@ public class StoreService {
         Page<StorePartsDto> mapped = result.map(row -> {
             Parts part = (Parts) row[0];
             StoreInventory storeInventory = (StoreInventory) row[1];
-            Boolean isLack = row[2] == null ? false : (Boolean) row[2];
-            log.info("storeInventory : {}, isLack : {]", storeInventory, isLack);
+            Boolean isLack = row[2] != null && (Boolean) row[2];
             return StorePartsDto.of(part, storeInventory, isLack);
         });
 
@@ -98,7 +97,39 @@ public class StoreService {
         log.info("[StoreService] ✅ 카테고리별 부족 재고 수 조회 완료 | totalCategories={}", result.size());
         return result.stream()
                 .map(row -> new CategoryLackCountDto((String) row[0], ((Long) row[1]).intValue()))
-                .toList();    }
+                .toList();
+    }
+
+    // 부품명으로 검색
+    public PageResponseDto<StorePartsDto> findByName(Long userId, String name, int page, int size) {
+        log.info("[StoreService] 🔍 부품명 검색 시작 | userId={}, name='{}', page={}, size={}", userId, name, page, size);
+
+        if (userId == null || userId <= 0) {
+            log.error("[StoreService] ❌ 잘못된 사용자 ID: {}", userId);
+            throw new BadRequestException("잘못된 사용자 ID입니다.");
+        }
+        if (page < 0 || size <= 0) {
+            log.error("[StoreService] ❌ 잘못된 페이지 요청 | page={}, size={}", page, size);
+            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Object[]> result = storeRepository.findByName(userId, name, pageable);
+        log.info("[StoreService] ✅ JPQL 조회 완료 | totalElements={}, totalPages={}",
+                result.getTotalElements(), result.getTotalPages());
+
+        Page<StorePartsDto> mapped = result.map(row -> {
+            Parts part = (Parts) row[0];
+            StoreInventory storeInventory = (StoreInventory) row[1];
+            Boolean isLack = row[2] != null && (Boolean) row[2];
+            return StorePartsDto.of(part, storeInventory, isLack);
+        });
+
+        log.info("[StoreService] 🏁 findByName() 종료 | mappedSize={}", mapped.getContent().size());
+
+        return PageResponseDto.from(mapped);
+    }
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
 //    private String exportTmpDir = "/tmp/stockmate";
