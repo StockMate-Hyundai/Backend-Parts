@@ -8,7 +8,6 @@ import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,15 +27,23 @@ public class PartsService {
     private final PartsRepository partsRepository;
 
     // 상세 부품 조회
-    public PartsDto getPartDetail(Long partId) {
-        log.info("[부품 상세 조회 요청] partId = {}", partId);
-        Parts result = partsRepository.findById(partId)
-                .orElseThrow(() -> {
-                    log.warn("[부품 조회 실패] 존재하지 않는 ID: {}", partId);
-                    return new EntityNotFoundException("해당 부품이 존재하지 않습니다. ID=" + partId);
-                });
-        log.info("[부품 조회 성공] partId = {}, name = {}", result.getId(), result.getName());
-        return PartsDto.of(result);
+    public List<PartsDto> getPartDetail(List<Long> partList) {
+        log.info("[부품 상세 조회 요청] partId = {}", partList);
+        List<PartsDto> response = new ArrayList<>();
+
+        for (Long id: partList) {
+            Parts result = partsRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.warn("[부품 조회 실패] 존재하지 않는 ID: {}", id);
+                        return new BadRequestException("존재하지 않는 부품 ID입니다.");
+                    });
+            response.add(
+                    PartsDto.of(result)
+            );
+        }
+
+        log.info("[부품 조회 성공] response size : {}", response.size());
+        return response;
     }
 
     // 전체 부품 조회
@@ -61,9 +67,6 @@ public class PartsService {
         Page<PartsDto> mapped = result.map(PartsDto::of);
         return PageResponseDto.from(mapped);
     }
-
-    // id로 조회
-//    public PartsDto getParts(Long id) {}
 
     // 부족 재고 조회
     public PageResponseDto<PartsDto> getLackStock(
@@ -107,6 +110,7 @@ public class PartsService {
             log.info("[checkStock] partId={}, stock={}, requested={}, canOrder={}",
                     req.getPartId(), stock, req.getAmount(), canOrder);
 
+            // TODO: 코드 리팩토링
             orders.add(OrderCheckDto.builder()
                     .partId(req.getPartId())
                     .requestedAmount(req.getAmount())
@@ -117,11 +121,9 @@ public class PartsService {
 
         log.info("<== [checkStock] 발주 가능 여부 확인 완료 | 결과 개수: {}", orders.size());
 
-        OrderCheckResponseDto responses = OrderCheckResponseDto.builder()
+        return OrderCheckResponseDto.builder()
                 .orderList(orders)
                 .totalPrice(totalAmount)
                 .build();
-
-        return responses;
     }
 }
