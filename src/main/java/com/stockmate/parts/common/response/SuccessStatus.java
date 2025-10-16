@@ -26,6 +26,8 @@ public enum SuccessStatus {
     STORE_CATEGORY_LACK_COUNT_SUCCESS(HttpStatus.OK, "카테고리별 부족 재고 조회 성공"),
     STORE_FIND_NAME_SUCCESS(HttpStatus.OK, "부품 검색 성공"),
 
+    STORE_LIMIT_UPDATE_SUCCESS(HttpStatus.OK, "최소 필요 수량 변경 성공"),
+
     // 본사 재고 관련
     PART_DISTRIBUTION_SUCCESS(HttpStatus.OK, "부품 분포 조회 성공"),
     PARTS_STOCK_CHECK_SUCCESS(HttpStatus.OK, "주문 가능 여부 조회 성공"),

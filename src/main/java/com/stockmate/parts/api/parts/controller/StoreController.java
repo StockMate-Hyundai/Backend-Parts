@@ -75,6 +75,18 @@ public class StoreController {
         return ApiResponse.success(SuccessStatus.STORE_FIND_NAME_SUCCESS, data);
     }
 
+    @Operation(summary = "최소 필요 수량 변경")
+    @PutMapping("/update-limit")
+    public ResponseEntity<ApiResponse<Void>> updateLimitAmount(
+            @RequestParam Long partId,
+            @RequestParam Integer newLimit,
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+        long userId = securityUser.getMemberId();
+        storeService.updateLimitAmount(userId, partId, newLimit);
+        return ApiResponse.success(SuccessStatus.STORE_LIMIT_UPDATE_SUCCESS, null);
+    }
+
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
 //    @GetMapping("/parts/{partId}")
