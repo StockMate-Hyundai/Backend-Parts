@@ -25,9 +25,9 @@ public class PartsController {
     @Operation(summary = "부품 상세 조회")
     @PostMapping("/detail")
     public ResponseEntity<ApiResponse<List<PartsDto>>> getPartDetail(
-            @RequestBody List<Long> partList
+            @RequestBody List<Long> partIds
     ) {
-        var data = partsService.getPartDetail(partList);
+        var data = partsService.getPartDetail(partIds);
         return ApiResponse.success(SuccessStatus.PARTS_DETAIL_SUCCESS, data);
     }
 

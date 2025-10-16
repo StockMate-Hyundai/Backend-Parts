@@ -27,20 +27,25 @@ public class PartsService {
     private final PartsRepository partsRepository;
 
     // 상세 부품 조회
-    public List<PartsDto> getPartDetail(List<Long> partList) {
-        log.info("[부품 상세 조회 요청] partId = {}", partList);
-        List<PartsDto> response = new ArrayList<>();
+    public List<PartsDto> getPartDetail(List<Long> partIds) {
+        log.info("[부품 상세 조회 요청] partId = {}", partIds);
 
-        for (Long id: partList) {
-            Parts result = partsRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.warn("[부품 조회 실패] 존재하지 않는 ID: {}", id);
-                        return new BadRequestException("존재하지 않는 부품 ID입니다.");
-                    });
-            response.add(
-                    PartsDto.of(result)
-            );
+        List<Parts> parts = partsRepository.findAllById(partIds);
+
+        if (parts.size() != partIds.size()) {
+            List<Long> foundIds = parts.stream()
+                    .map(Parts::getId)
+                    .toList();
+            List<Long> missingIds = partIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+            log.warn("[부품 조회 실패] 존재하지 않는 ID: {}", missingIds);
+            throw new BadRequestException("존재하지 않는 부품 ID: " + missingIds);
         }
+
+        List<PartsDto> response = parts.stream()
+                .map(PartsDto::of)
+                .toList();
 
         log.info("[부품 조회 성공] response size : {}", response.size());
         return response;

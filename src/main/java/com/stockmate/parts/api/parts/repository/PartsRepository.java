@@ -33,9 +33,6 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
             Pageable pageable
     );
 
-    // id로 검색
-    Optional<Parts> findById(Long id);
-
     // 부족 재고 조회
     Page<Parts> findByAmountLessThanEqual(Integer amount, Pageable pageable);
 }
