@@ -1,6 +1,7 @@
 package com.stockmate.parts.api.parts.controller;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
+import com.stockmate.parts.api.parts.dto.store.CategoryLackCountDto;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.service.StoreService;
 import com.stockmate.parts.common.config.swagger.security.SecurityUser;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "store", description = "지점 재고 관련 API 입니다.")
+@Tag(name = "Store", description = "지점 재고 관련 API 입니다.")
 @RestController
 @RequestMapping("/api/v1/store")
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class StoreController {
 
     private final StoreService storeService;
 
-    @Operation(summary = "지점 재고조회")
+    @Operation(summary = "지점 재고 조회")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getInventories(
             @RequestParam(defaultValue = "0") int page,
@@ -35,10 +36,10 @@ public class StoreController {
     ) {
         long userId = securityUser.getMemberId();
         var data = storeService.searchParts(userId, categoryName, trim, model, page, size);
-        return ApiResponse.success(SuccessStatus.INVENTORY_FETCH_SUCCESS, data);
+        return ApiResponse.success(SuccessStatus.STORE_SEARCH_SUCCESS, data);
     }
 
-    @Operation(summary = "카테고리별 부족재고 조회")
+    @Operation(summary = "카테고리별 부족 재고 조회")
     @GetMapping("/under-limit")
     public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> getUnderLimitInventories(
             @RequestParam(required = false) String categoryName,
@@ -48,7 +49,17 @@ public class StoreController {
     ) {
         long userId = securityUser.getMemberId();
         var data = storeService.getUnderLimit(userId, categoryName, page, size);
-        return ApiResponse.success(SuccessStatus.INVENTORY_UNDER_LIMIT_SUCCESS, data);
+        return ApiResponse.success(SuccessStatus.STORE_UNDER_LIMIT_SUCCESS, data);
+    }
+
+    @Operation(summary = "카테고리별 부족 재고 갯수 조회")
+    @GetMapping("/lack-count")
+    public ResponseEntity<ApiResponse<List<CategoryLackCountDto>>> getCategoryLackCount(
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+        long userId = securityUser.getMemberId();
+        var data = storeService.getCategoryLackCount(userId);
+        return ApiResponse.success(SuccessStatus.STORE_CATEGORY_LACK_COUNT_SUCCESS, data);
     }
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
