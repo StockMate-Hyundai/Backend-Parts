@@ -46,11 +46,11 @@
       "volumesFrom": []
     }
   ],
-  "cpu": "1024",
+  "cpu": "512",
   "enableFaultInjection": false,
   "executionRoleArn": "arn:aws:iam::417172393745:role/ecsTaskExecutionRole",
   "family": "stockmate-parts",
-  "memory": "2048",
+  "memory": "1024",
   "networkMode": "awsvpc",
   "placementConstraints": [],
   "registeredAt": "2025-10-05T05:07:32.477Z",
