@@ -61,6 +61,20 @@ public class StoreController {
         var data = storeService.getCategoryLackCount(userId);
         return ApiResponse.success(SuccessStatus.STORE_CATEGORY_LACK_COUNT_SUCCESS, data);
     }
+
+    @Operation(summary = "부품명으로 검색")
+    @GetMapping("/find-name")
+    public ResponseEntity<ApiResponse<PageResponseDto<StorePartsDto>>> findByName(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+        long userId = securityUser.getMemberId();
+        var data = storeService.findByName(userId, name, page, size);
+        return ApiResponse.success(SuccessStatus.STORE_FIND_NAME_SUCCESS, data);
+    }
+
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
 //    @GetMapping("/parts/{partId}")

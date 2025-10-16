@@ -1,6 +1,5 @@
 package com.stockmate.parts.api.parts.repository;
 
-import com.stockmate.parts.api.parts.dto.store.CategoryLackCountDto;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -54,6 +53,20 @@ public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
         group by p.categoryName
     """)
     List<Object[]> countLackPartsByCategory(Long userId);
+
+    // 부품명으로 검색
+    @Query("""
+        select p, si, CASE WHEN si.amount < si.limitAmount Then true ELSE false END
+        from StoreInventory si
+        join si.part p
+        where si.userId = :userId
+            and (:name is null or :name = '' or p.korName like concat('%', :name, '%'))
+    """)
+    Page<Object[]> findByName(
+            Long userId,
+            String name,
+            Pageable pageable
+    );
 
 //    // 특정 부품이 부족재고인 지점 개수
 //    @Query("""
