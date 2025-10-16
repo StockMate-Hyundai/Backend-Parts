@@ -7,6 +7,7 @@ import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import com.stockmate.parts.api.parts.repository.StoreRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -101,6 +102,7 @@ public class StoreService {
     }
 
     // 부품명으로 검색
+    @Transactional
     public PageResponseDto<StorePartsDto> findByName(Long userId, String name, int page, int size) {
         log.info("[StoreService] 🔍 부품명 검색 시작 | userId={}, name='{}', page={}, size={}", userId, name, page, size);
 
@@ -129,6 +131,32 @@ public class StoreService {
         log.info("[StoreService] 🏁 findByName() 종료 | mappedSize={}", mapped.getContent().size());
 
         return PageResponseDto.from(mapped);
+    }
+
+    // 최소 필요 수량 변경
+    @Transactional
+    public void updateLimitAmount(Long userId, Long partId, Integer newLimit) {
+        log.info("[StoreService] 🔧 최소 수량 변경 요청 | userId={}, partId={}, newLimitAmount={}", userId, partId, newLimit);
+
+        if (userId == null || userId <= 0 || partId == null || partId <= 0) {
+            log.error("[StoreService] ❌ 잘못된 ID 값 | userId={}, partId={}", userId, partId);
+            throw new BadRequestException("잘못된 사용자 또는 부품 ID입니다.");
+        }
+        if (newLimit == null || newLimit < 0) {
+            log.error("[StoreService] ❌ 잘못된 최소 수량 | newLimitAmount={}", newLimit);
+            throw new BadRequestException("최소 수량은 0 이상이어야 합니다.");
+        }
+
+        StoreInventory storeInventory = storeRepository.findStoreInventoryByUserIdAndPartId(userId, partId)
+                .orElseThrow(() -> {
+                    log.error("[StoreService] ❌ 해당 부품이 존재하지 않음 | userId={}, partId={}", userId, partId);
+                    return new BadRequestException("해당 부품이 존재하지 않습니다.");
+                });
+
+        storeInventory.setLimitAmount(newLimit);
+        storeRepository.save(storeInventory);
+
+        log.info("[StoreService] ✅ 최소 수량 변경 완료 | userId={}, partId={}, newLimitAmount={}", userId, partId, newLimit);
     }
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
