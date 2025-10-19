@@ -1,7 +1,7 @@
 package com.stockmate.parts.api.parts.controller;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.store.CategoryLackCountDto;
+import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.service.StoreService;
 import com.stockmate.parts.common.config.swagger.security.SecurityUser;
@@ -54,7 +54,7 @@ public class StoreController {
 
     @Operation(summary = "카테고리별 부족 재고 갯수 조회")
     @GetMapping("/lack-count")
-    public ResponseEntity<ApiResponse<List<CategoryLackCountDto>>> getCategoryLackCount(
+    public ResponseEntity<ApiResponse<List<CategoryAmountDto>>> getCategoryLackCount(
             @AuthenticationPrincipal SecurityUser securityUser
     ) {
         long userId = securityUser.getMemberId();

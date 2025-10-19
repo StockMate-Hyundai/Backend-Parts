@@ -35,6 +35,7 @@ public enum SuccessStatus {
     PARTS_LIST_SUCCESS(HttpStatus.OK, "부품 목록 조회 성공"),
     PARTS_MODEL_CATEGORY_SUCCESS(HttpStatus.OK, "부품 검색 성공"),
     PARTS_LACK_STOCK(HttpStatus.OK, "부족 재고 조회 성공"),
+    PARTS_CATEGORY_AMOUNT(HttpStatus.OK, "카테고리별 재고 수 조회 성공"),
 
     /**
      * 201

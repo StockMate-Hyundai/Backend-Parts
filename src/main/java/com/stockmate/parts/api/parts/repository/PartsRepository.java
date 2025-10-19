@@ -8,20 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface PartsRepository extends JpaRepository<Parts, Long> {
-    // 전체 조회
-    Page<Parts> findAll(Pageable pageable);
-
-    // 이름으로 검색
-    Page<Parts> findByNameContainingIgnoreCase(String name, Pageable pageable);
-
     // categoryName + model로 검색, 없으면 전체 검색
     @Query("""
     select p
     from Parts p
-    where 
+    where
         (:categoryNames is null or p.categoryName in :categoryNames)
         and (:trims is null or p.trim in :trims)
         and (:models is null or p.model in :models)
@@ -35,4 +28,12 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
 
     // 부족 재고 조회
     Page<Parts> findByAmountLessThanEqual(Integer amount, Pageable pageable);
+
+    // 카테고리별 재고 갯수
+    @Query("""
+    select p.categoryName, count(p)
+    from Parts p
+    group by categoryName
+    """)
+    List<Object[]> categoryAmount();
 }

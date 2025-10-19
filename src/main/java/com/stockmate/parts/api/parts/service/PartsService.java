@@ -1,5 +1,6 @@
 package com.stockmate.parts.api.parts.service;
 
+import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
@@ -130,5 +131,19 @@ public class PartsService {
                 .orderList(orders)
                 .totalPrice(totalAmount)
                 .build();
+    }
+
+    // 카테고리별 재고 갯수
+    public List<CategoryAmountDto> categoryAmount() {
+        log.info("[PartsService] 🔍 카테고리별 부품 수 조회 시작");
+
+        List<Object[]> result = partsRepository.categoryAmount();
+
+        List<CategoryAmountDto> mapped = result.stream()
+                .map(row -> new CategoryAmountDto((String) row[0], ((Long) row[1]).intValue()))
+                .toList();
+
+        log.info("[PartsService] 🏁 카테고리별 부품 수 조회 완료 | totalMapped={}", mapped.size());
+        return mapped;
     }
 }
