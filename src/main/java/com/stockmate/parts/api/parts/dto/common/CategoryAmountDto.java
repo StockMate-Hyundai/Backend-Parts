@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto.store;
+package com.stockmate.parts.api.parts.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryLackCountDto {
+public class CategoryAmountDto {
     private String categoryName;
     private Integer count;
 }

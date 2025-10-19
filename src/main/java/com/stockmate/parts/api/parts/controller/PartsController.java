@@ -1,5 +1,6 @@
 package com.stockmate.parts.api.parts.controller;
 
+import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
 import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
@@ -72,5 +73,12 @@ public class PartsController {
     ) {
         var data = partsService.checkStock(requests);
         return ApiResponse.success(SuccessStatus.PARTS_STOCK_CHECK_SUCCESS, data);
+    }
+
+    @Operation(summary = "카테고리별 부품 갯수 조회")
+    @GetMapping("/category-amount")
+    public ResponseEntity<ApiResponse<List<CategoryAmountDto>>> categoryAmount() {
+        var data = partsService.categoryAmount();
+        return ApiResponse.success(SuccessStatus.PARTS_CATEGORY_AMOUNT, data);
     }
 }
