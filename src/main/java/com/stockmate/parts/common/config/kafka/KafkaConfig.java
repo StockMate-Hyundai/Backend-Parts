@@ -31,7 +31,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        
+
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -52,7 +52,7 @@ public class KafkaConfig {
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        
+
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
