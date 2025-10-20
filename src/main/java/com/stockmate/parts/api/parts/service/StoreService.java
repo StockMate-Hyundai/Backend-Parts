@@ -1,7 +1,7 @@
 package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.store.CategoryLackCountDto;
+import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
@@ -85,7 +85,7 @@ public class StoreService {
     }
 
     // 카테고리별 부족 제품 갯수
-    public List<CategoryLackCountDto> getCategoryLackCount(Long userId) {
+    public List<CategoryAmountDto> getCategoryLackCount(Long userId) {
         log.info("[StoreService] 🔍 카테고리별 부족 재고 수 조회 시작 | userId={}", userId);
 
         if (userId == null || userId <= 0) {
@@ -97,7 +97,7 @@ public class StoreService {
 
         log.info("[StoreService] ✅ 카테고리별 부족 재고 수 조회 완료 | totalCategories={}", result.size());
         return result.stream()
-                .map(row -> new CategoryLackCountDto((String) row[0], ((Long) row[1]).intValue()))
+                .map(row -> new CategoryAmountDto((String) row[0], ((Long) row[1]).intValue()))
                 .toList();
     }
 
