@@ -9,6 +9,7 @@ import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
+import com.stockmate.parts.common.producer.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import java.util.List;
 @Slf4j
 public class PartsService {
     private final PartsRepository partsRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     // 상세 부품 조회
     public List<PartsDto> getPartDetail(List<Long> partIds) {
@@ -145,5 +147,95 @@ public class PartsService {
 
         log.info("[PartsService] 🏁 카테고리별 부품 수 조회 완료 | totalMapped={}", mapped.size());
         return mapped;
+    }
+
+    // 재고 차감 (Saga Pattern)
+    @Transactional
+    public void deductStock(com.stockmate.parts.api.parts.dto.StockDeductionRequestEvent event) {
+        log.info("재고 차감 시작 - Order ID: {}, Order Number: {}", event.getOrderId(), event.getOrderNumber());
+
+        try {
+            for (com.stockmate.parts.api.parts.dto.StockDeductionRequestEvent.StockDeductionItem item : event.getItems()) {
+                Parts part = partsRepository.findById(item.getPartId())
+                        .orElseThrow(() -> {
+                            log.error("부품을 찾을 수 없음 - Part ID: {}", item.getPartId());
+                            return new RuntimeException("부품을 찾을 수 없습니다. Part ID: " + item.getPartId());
+                        });
+
+                // 재고 확인
+                if (part.getAmount() < item.getAmount()) {
+                    log.warn("재고 부족 - Part ID: {}, 현재 재고: {}, 요청 수량: {}",
+                            item.getPartId(), part.getAmount(), item.getAmount());
+                    throw new RuntimeException(String.format(
+                            "재고가 부족합니다. Part ID: %d, 현재 재고: %d, 요청 수량: %d",
+                            item.getPartId(), part.getAmount(), item.getAmount()));
+                }
+
+                // 재고 차감
+                int newAmount = part.getAmount() - item.getAmount();
+                part.setAmount(newAmount);
+                partsRepository.save(part);
+
+                log.info("재고 차감 성공 - Part ID: {}, 차감 수량: {}, 남은 재고: {}",
+                        item.getPartId(), item.getAmount(), newAmount);
+            }
+
+            // 모든 재고 차감 성공 → 성공 이벤트 발행
+            com.stockmate.parts.api.parts.dto.StockDeductionSuccessEvent successEvent = 
+                    com.stockmate.parts.api.parts.dto.StockDeductionSuccessEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .build();
+
+            kafkaProducerService.sendStockDeductionSuccess(successEvent);
+
+            log.info("재고 차감 완료 및 성공 이벤트 발행 - Order ID: {}", event.getOrderId());
+
+        } catch (Exception e) {
+            log.error("재고 차감 실패 - Order ID: {}, 에러: {}", event.getOrderId(), e.getMessage(), e);
+
+            // 실패 이벤트 발행
+            com.stockmate.parts.api.parts.dto.StockDeductionFailedEvent failedEvent = 
+                    com.stockmate.parts.api.parts.dto.StockDeductionFailedEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .reason(e.getMessage())
+                    .build();
+
+            kafkaProducerService.sendStockDeductionFailed(failedEvent);
+
+            log.info("재고 차감 실패 이벤트 발행 완료 - Order ID: {}", event.getOrderId());
+        }
+    }
+
+    // 재고 복구 (보상 트랜잭션)
+    @Transactional
+    public void restoreStock(com.stockmate.parts.api.parts.dto.StockRestoreRequestEvent event) {
+        log.info("재고 복구 시작 - Order ID: {}, Order Number: {}, Reason: {}",
+                event.getOrderId(), event.getOrderNumber(), event.getReason());
+
+        try {
+            for (com.stockmate.parts.api.parts.dto.StockRestoreRequestEvent.StockRestoreItem item : event.getItems()) {
+                Parts part = partsRepository.findById(item.getPartId())
+                        .orElseThrow(() -> {
+                            log.error("부품을 찾을 수 없음 - Part ID: {}", item.getPartId());
+                            return new RuntimeException("부품을 찾을 수 없습니다. Part ID: " + item.getPartId());
+                        });
+
+                // 재고 복구
+                int newAmount = part.getAmount() + item.getAmount();
+                part.setAmount(newAmount);
+                partsRepository.save(part);
+
+                log.info("재고 복구 성공 - Part ID: {}, 복구 수량: {}, 현재 재고: {}",
+                        item.getPartId(), item.getAmount(), newAmount);
+            }
+
+            log.info("재고 복구 완료 - Order ID: {}", event.getOrderId());
+
+        } catch (Exception e) {
+            log.error("재고 복구 실패 - Order ID: {}, 에러: {}", event.getOrderId(), e.getMessage(), e);
+            // 재고 복구 실패는 심각한 문제이므로 별도 알림/처리 필요
+        }
     }
 }
