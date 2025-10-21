@@ -185,11 +185,13 @@ public class PartsService {
                     com.stockmate.parts.api.parts.dto.StockDeductionSuccessEvent.builder()
                     .orderId(event.getOrderId())
                     .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId(event.getApprovalAttemptId())
                     .build();
 
             kafkaProducerService.sendStockDeductionSuccess(successEvent);
 
-            log.info("재고 차감 완료 및 성공 이벤트 발행 - Order ID: {}", event.getOrderId());
+            log.info("재고 차감 완료 및 성공 이벤트 발행 - Order ID: {}, Attempt ID: {}", 
+                    event.getOrderId(), event.getApprovalAttemptId());
 
         } catch (Exception e) {
             log.error("재고 차감 실패 - Order ID: {}, 에러: {}", event.getOrderId(), e.getMessage(), e);
@@ -199,12 +201,14 @@ public class PartsService {
                     com.stockmate.parts.api.parts.dto.StockDeductionFailedEvent.builder()
                     .orderId(event.getOrderId())
                     .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId(event.getApprovalAttemptId())
                     .reason(e.getMessage())
                     .build();
 
             kafkaProducerService.sendStockDeductionFailed(failedEvent);
 
-            log.info("재고 차감 실패 이벤트 발행 완료 - Order ID: {}", event.getOrderId());
+            log.info("재고 차감 실패 이벤트 발행 완료 - Order ID: {}, Attempt ID: {}", 
+                    event.getOrderId(), event.getApprovalAttemptId());
         }
     }
 
