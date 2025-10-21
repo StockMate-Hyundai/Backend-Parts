@@ -33,4 +33,6 @@ public class Parts extends BaseTimeEntity {
     )
     @Column(name = "code")
     private List<String> code_;
+    private String location;
+    private Long cost;
 }
