@@ -21,6 +21,9 @@ public class PartsDto {
     private String engName;
     private String categoryName;
     private Integer amount;
+    private String code;
+    private String location;
+    private Long cost;
 
     public static PartsDto of(Parts p) {
         return PartsDto.builder()
@@ -36,6 +39,9 @@ public class PartsDto {
                 .engName(p.getEngName())
                 .categoryName(p.getCategoryName())
                 .amount(p.getAmount())
+                .code(p.getCode())
+                .location(p.getLocation())
+                .cost(p.getCost())
                 .build();
     }
 }
