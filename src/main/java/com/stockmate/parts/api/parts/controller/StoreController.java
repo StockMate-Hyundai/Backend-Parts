@@ -10,6 +10,7 @@ import com.stockmate.parts.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/store")
 @RequiredArgsConstructor
+@Slf4j
 public class StoreController {
 
     private final StoreService storeService;
@@ -85,6 +87,29 @@ public class StoreController {
         long userId = securityUser.getMemberId();
         storeService.updateLimitAmount(userId, partId, newLimit);
         return ApiResponse.success(SuccessStatus.STORE_LIMIT_UPDATE_SUCCESS, null);
+    }
+
+    @Operation(summary = "가맹점 부품 재고 등록/수정 API", description = "가맹점의 부품 재고를 등록하거나 수정합니다.")
+    @PostMapping("/inventory/update")
+    public ResponseEntity<ApiResponse<com.stockmate.parts.api.parts.dto.StoreInventoryUpdateResponseDTO>> updateStoreInventory(
+            @RequestBody com.stockmate.parts.api.parts.dto.StoreInventoryUpdateRequestDTO requestDTO) {
+
+        log.info("가맹점 부품 재고 업데이트 요청 - 가맹점 ID: {}, 아이템 수: {}", 
+                requestDTO.getMemberId(), requestDTO.getItems().size());
+
+        storeService.updateStoreInventory(requestDTO.getMemberId(), requestDTO.getItems());
+
+        com.stockmate.parts.api.parts.dto.StoreInventoryUpdateResponseDTO response = 
+                com.stockmate.parts.api.parts.dto.StoreInventoryUpdateResponseDTO.builder()
+                .memberId(requestDTO.getMemberId())
+                .message("재고 업데이트 성공")
+                .updatedItemCount(requestDTO.getItems().size())
+                .build();
+
+        log.info("가맹점 부품 재고 업데이트 완료 - 가맹점 ID: {}, 업데이트된 아이템 수: {}", 
+                requestDTO.getMemberId(), requestDTO.getItems().size());
+
+        return ApiResponse.success(SuccessStatus.UPDATE_STORE_INVENTORY_SUCCESS, response);
     }
 
 //
