@@ -3,10 +3,15 @@ package com.stockmate.parts.api.parts.service;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessRequestEvent;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessSuccessEvent;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessFailedEvent;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import com.stockmate.parts.api.parts.repository.StoreRepository;
+import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
+import com.stockmate.parts.common.producer.KafkaProducerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +27,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StoreService {
     private final StoreRepository storeRepository;
+    private final PartsRepository partsRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     public PageResponseDto<StorePartsDto> searchParts(
             Long userId, List<String> categoryName, List<String> trim, List<String> model,
@@ -157,6 +164,74 @@ public class StoreService {
         storeRepository.save(storeInventory);
 
         log.info("[StoreService] ✅ 최소 수량 변경 완료 | userId={}, partId={}, newLimitAmount={}", userId, partId, newLimit);
+    }
+
+    // 입고 처리 (Kafka Consumer에서 호출)
+    @Transactional
+    public void processReceivingRequest(ReceivingProcessRequestEvent event) {
+        log.info("[StoreService] 📦 입고 처리 시작 - Order ID: {}, Order Number: {}, 가맹점 ID: {}", 
+                event.getOrderId(), event.getOrderNumber(), event.getMemberId());
+
+        try {
+            // 각 부품별로 재고 추가
+            for (ReceivingProcessRequestEvent.ReceivingItemDTO item : event.getItems()) {
+                Long partId = item.getPartId();
+                int quantity = item.getQuantity();
+
+                log.info("[StoreService] 부품 재고 추가 - Part ID: {}, Quantity: {}", partId, quantity);
+
+                // 부품 존재 확인
+                Parts part = partsRepository.findById(partId)
+                        .orElseThrow(() -> {
+                            log.error("[StoreService] ❌ 부품을 찾을 수 없음 - Part ID: {}", partId);
+                            return new BadRequestException("부품을 찾을 수 없습니다: " + partId);
+                        });
+
+                // 기존 재고 조회 또는 새로 생성
+                StoreInventory storeInventory = storeRepository.findStoreInventoryByUserIdAndPartId(event.getMemberId(), partId)
+                        .orElse(StoreInventory.builder()
+                                .userId(event.getMemberId())
+                                .part(part)
+                                .amount(0)
+                                .limitAmount(0)
+                                .build());
+
+                // 재고 추가 (기존 amount 필드 사용)
+                storeInventory.setAmount((storeInventory.getAmount() != null ? storeInventory.getAmount() : 0) + quantity);
+                storeRepository.save(storeInventory);
+
+                log.info("[StoreService] ✅ 부품 재고 추가 완료 - Part ID: {}, 추가 수량: {}, 현재 재고: {}", 
+                        partId, quantity, storeInventory.getAmount());
+            }
+
+            // 성공 이벤트 발송
+            ReceivingProcessSuccessEvent successEvent = ReceivingProcessSuccessEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId(event.getApprovalAttemptId())
+                    .message("입고 처리 성공")
+                    .build();
+
+            kafkaProducerService.sendReceivingProcessSuccess(successEvent);
+            log.info("[StoreService] ✅ 입고 처리 성공 이벤트 발송 완료 - Order ID: {}", event.getOrderId());
+
+        } catch (Exception e) {
+            log.error("[StoreService] ❌ 입고 처리 실패 - Order ID: {}, Error: {}", event.getOrderId(), e.getMessage(), e);
+
+            // 실패 이벤트 발송
+            ReceivingProcessFailedEvent failedEvent = ReceivingProcessFailedEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId(event.getApprovalAttemptId())
+                    .errorMessage("입고 처리 실패: " + e.getMessage())
+                    .data(e)
+                    .build();
+
+            kafkaProducerService.sendReceivingProcessFailed(failedEvent);
+            log.info("[StoreService] ❌ 입고 처리 실패 이벤트 발송 완료 - Order ID: {}", event.getOrderId());
+
+            throw e;
+        }
     }
 
 //    @Value("${stockmate.export.tmp-dir:/tmp/stockmate}")
