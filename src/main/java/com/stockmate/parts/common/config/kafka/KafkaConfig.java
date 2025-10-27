@@ -4,6 +4,9 @@ import com.stockmate.parts.api.parts.dto.StockDeductionFailedEvent;
 import com.stockmate.parts.api.parts.dto.StockDeductionRequestEvent;
 import com.stockmate.parts.api.parts.dto.StockDeductionSuccessEvent;
 import com.stockmate.parts.api.parts.dto.StockRestoreRequestEvent;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessRequestEvent;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessSuccessEvent;
+import com.stockmate.parts.api.parts.dto.ReceivingProcessFailedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -48,6 +51,8 @@ public class KafkaConfig {
         Map<String, Class<?>> classIdMapping = new HashMap<>();
         classIdMapping.put("stockDeductionSuccess", StockDeductionSuccessEvent.class);
         classIdMapping.put("stockDeductionFailed", StockDeductionFailedEvent.class);
+        classIdMapping.put("receivingProcessSuccess", ReceivingProcessSuccessEvent.class);
+        classIdMapping.put("receivingProcessFailed", ReceivingProcessFailedEvent.class);
         typeMapper.setIdClassMapping(classIdMapping);
         jsonSerializer.setTypeMapper(typeMapper);
 
@@ -71,7 +76,7 @@ public class KafkaConfig {
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.stockmate.parts.api.parts.dto.StockDeductionRequestEvent");
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.stockmate.parts.api.parts.dto.ReceivingProcessRequestEvent");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
         log.info("Kafka Consumer Factory 설정 완료 - Bootstrap Servers: {}", bootstrapServers);
