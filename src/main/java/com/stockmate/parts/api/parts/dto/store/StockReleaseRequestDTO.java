@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StockReleaseRequestDTO {
-    private Long memberId; // 가맹점 ID
     private List<StockReleaseItem> items; // 출고할 부품 목록
 
     @Getter
