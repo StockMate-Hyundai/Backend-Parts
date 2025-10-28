@@ -54,6 +54,7 @@ public enum SuccessStatus {
     SAVE_CONTACT_SUCCESS(HttpStatus.CREATED,"문의처 정보 등록 성공"),
     CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED,"카테고리 생성 성공"),
     UPDATE_STORE_INVENTORY_SUCCESS(HttpStatus.OK,"가맹점 재고 업데이트 성공"),
+    RELEASE_STOCK_SUCCESS(HttpStatus.OK,"가맹점 부품 출고 처리 성공"),
 
     ;
 
