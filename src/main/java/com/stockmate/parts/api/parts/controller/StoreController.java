@@ -117,7 +117,7 @@ public class StoreController {
     @PostMapping("/release")
     public ResponseEntity<ApiResponse<Void>> releaseStock(@RequestBody StockReleaseRequestDTO requestDTO, @AuthenticationPrincipal SecurityUser securityUser) {
 
-        log.info("가맹점 부품 출고 처리 요청 - 요청자 ID: {}, 출고 아이템 수: {}", 
+        log.info("가맹점 부품 출고 처리 요청 - 요청자 ID: {}, 출고 아이템 수: {}",
                 securityUser.getMemberId(), requestDTO.getItems().size());
 
         storeService.releaseStock(requestDTO, securityUser.getMemberId());
