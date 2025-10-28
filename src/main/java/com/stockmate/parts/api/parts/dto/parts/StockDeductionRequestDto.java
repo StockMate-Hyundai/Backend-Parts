@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.parts;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDeductionRequestEvent {
+public class StockDeductionRequestDto {
     private Long orderId;
     private String orderNumber;
-    private String approvalAttemptId; // Saga 시도 식별자
     private List<StockDeductionItem> items;
 
     @Getter
@@ -26,3 +25,4 @@ public class StockDeductionRequestEvent {
         private int amount;
     }
 }
+

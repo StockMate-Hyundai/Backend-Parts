@@ -2,9 +2,7 @@ package com.stockmate.parts.api.parts.controller;
 
 import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.PartsDto;
+import com.stockmate.parts.api.parts.dto.parts.*;
 import com.stockmate.parts.api.parts.service.PartsService;
 import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
@@ -80,5 +78,22 @@ public class PartsController {
     public ResponseEntity<ApiResponse<List<CategoryAmountDto>>> categoryAmount() {
         var data = partsService.categoryAmount();
         return ApiResponse.success(SuccessStatus.PARTS_CATEGORY_AMOUNT, data);
+    }
+
+    @Operation(summary = "재고 차감 API (주문 승인용)")
+    @PostMapping("/deduct-stock")
+    public ResponseEntity<ApiResponse<StockDeductionResponseDto>> deductStock(
+            @RequestBody StockDeductionRequestDto requestDto
+    ) {
+        partsService.deductStockApi(requestDto);
+        
+        StockDeductionResponseDto response = StockDeductionResponseDto.builder()
+                .orderId(requestDto.getOrderId())
+                .orderNumber(requestDto.getOrderNumber())
+                .message("재고 차감 성공")
+                .success(true)
+                .build();
+        
+        return ApiResponse.success(SuccessStatus.PARTS_STOCK_DEDUCTION_SUCCESS, response);
     }
 }

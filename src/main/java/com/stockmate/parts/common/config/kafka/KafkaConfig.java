@@ -1,12 +1,5 @@
 package com.stockmate.parts.common.config.kafka;
 
-import com.stockmate.parts.api.parts.dto.StockDeductionFailedEvent;
-import com.stockmate.parts.api.parts.dto.StockDeductionRequestEvent;
-import com.stockmate.parts.api.parts.dto.StockDeductionSuccessEvent;
-import com.stockmate.parts.api.parts.dto.StockRestoreRequestEvent;
-import com.stockmate.parts.api.parts.dto.ReceivingProcessRequestEvent;
-import com.stockmate.parts.api.parts.dto.ReceivingProcessSuccessEvent;
-import com.stockmate.parts.api.parts.dto.ReceivingProcessFailedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -43,20 +36,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        // Producer가 메시지 헤더에 타입 ID를 추가하도록 설정
-        JsonSerializer<Object> jsonSerializer = new JsonSerializer<>();
-        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
-        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
-
-        Map<String, Class<?>> classIdMapping = new HashMap<>();
-        classIdMapping.put("stockDeductionSuccess", StockDeductionSuccessEvent.class);
-        classIdMapping.put("stockDeductionFailed", StockDeductionFailedEvent.class);
-        classIdMapping.put("receivingProcessSuccess", ReceivingProcessSuccessEvent.class);
-        classIdMapping.put("receivingProcessFailed", ReceivingProcessFailedEvent.class);
-        typeMapper.setIdClassMapping(classIdMapping);
-        jsonSerializer.setTypeMapper(typeMapper);
-
-        return new DefaultKafkaProducerFactory<>(configProps, new StringSerializer(), jsonSerializer);
+        return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
@@ -74,24 +54,10 @@ public class KafkaConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
-        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, true); // 타입 헤더 사용
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        // Consumer용 타입 매핑 설정
-        JsonDeserializer<Object> jsonDeserializer = new JsonDeserializer<>();
-        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
-
-        Map<String, Class<?>> classIdMapping = new HashMap<>();
-        classIdMapping.put("stockDeductionRequest", StockDeductionRequestEvent.class);
-        classIdMapping.put("stockRestoreRequest", StockRestoreRequestEvent.class);
-        classIdMapping.put("receivingProcessRequest", ReceivingProcessRequestEvent.class);
-        typeMapper.setIdClassMapping(classIdMapping);
-        jsonDeserializer.setTypeMapper(typeMapper);
-        jsonDeserializer.addTrustedPackages("com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
-
         log.info("Kafka Consumer Factory 설정 완료 - Bootstrap Servers: {}", bootstrapServers);
-        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new ErrorHandlingDeserializer<>(jsonDeserializer));
+        return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
