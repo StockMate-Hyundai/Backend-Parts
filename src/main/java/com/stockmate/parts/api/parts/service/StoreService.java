@@ -261,15 +261,8 @@ public class StoreService {
 
             log.info("[StoreService] 부품 출고 처리 - Part Code: {}, Quantity: {}", partCode, quantity);
 
-            // 1. 부품 코드로 부품 조회
-            Parts part = partsRepository.findByCode(partCode)
-                    .orElseThrow(() -> {
-                        log.error("[StoreService] ❌ 부품을 찾을 수 없음 - Part Code: {}", partCode);
-                        return new BadRequestException("부품을 찾을 수 없습니다: " + partCode);
-                    });
-
-            // 2. 가맹점의 해당 부품 재고 조회
-            StoreInventory storeInventory = storeRepository.findStoreInventoryByUserIdAndPartId(memberId, part.getId())
+            // 1. 가맹점 ID + 부품 코드로 직접 재고 조회
+            StoreInventory storeInventory = storeRepository.findByUserIdAndPartCode(memberId, partCode)
                     .orElseThrow(() -> {
                         log.error("[StoreService] ❌ 가맹점에 해당 부품 재고가 없음 - Member ID: {}, Part Code: {}", 
                                 memberId, partCode);
@@ -277,7 +270,7 @@ public class StoreService {
                                 "가맹점에 해당 부품 재고가 없습니다. Part Code: %s", partCode));
                     });
 
-            // 3. 재고 확인
+            // 2. 재고 확인
             int currentAmount = storeInventory.getAmount() != null ? storeInventory.getAmount() : 0;
             if (currentAmount < quantity) {
                 log.error("[StoreService] ❌ 재고 부족 - Part Code: {}, 현재 재고: {}, 요청 수량: {}", 
@@ -287,7 +280,7 @@ public class StoreService {
                         partCode, currentAmount, quantity));
             }
 
-            // 4. 재고 차감
+            // 3. 재고 차감
             int newAmount = currentAmount - quantity;
             storeInventory.setAmount(newAmount);
             storeRepository.save(storeInventory);
@@ -295,10 +288,11 @@ public class StoreService {
             log.info("[StoreService] ✅ 부품 출고 완료 - Part Code: {}, 출고 수량: {}, 남은 재고: {}", 
                     partCode, quantity, newAmount);
 
-            // 5. 출고 결과 추가
+            // 4. 출고 결과 추가
             releasedItems.add(com.stockmate.parts.api.parts.dto.store.ReleasedItemDTO.builder()
+                    .partId(storeInventory.getPart().getId())
                     .partCode(partCode)
-                    .partName(part.getKorName())
+                    .partName(storeInventory.getPart().getKorName())
                     .releasedQuantity(quantity)
                     .remainingQuantity(newAmount)
                     .build());
@@ -321,14 +315,10 @@ public class StoreService {
         // 부품 간단 정보를 items 리스트로 변환 (ID, 수량만)
         java.util.List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
         for (com.stockmate.parts.api.parts.dto.store.ReleasedItemDTO item : releasedItems) {
-            // Parts 엔티티에서 ID 조회
-            Parts part = partsRepository.findByCode(item.getPartCode()).orElse(null);
-            if (part != null) {
-                java.util.Map<String, Object> itemMap = new java.util.HashMap<>();
-                itemMap.put("partId", part.getId());
-                itemMap.put("quantity", item.getReleasedQuantity());
-                items.add(itemMap);
-            }
+            java.util.Map<String, Object> itemMap = new java.util.HashMap<>();
+            itemMap.put("partId", item.getPartId());
+            itemMap.put("quantity", item.getReleasedQuantity());
+            items.add(itemMap);
         }
         
         java.util.Map<String, Object> requestBody = new java.util.HashMap<>();

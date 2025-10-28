@@ -72,6 +72,15 @@ public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
     // 최소 필요 수량 변경
     Optional<StoreInventory> findStoreInventoryByUserIdAndPartId(Long userId, Long partId);
 
+    // 가맹점 ID와 부품 코드로 재고 조회
+    @Query("""
+        SELECT si
+        FROM StoreInventory si
+        JOIN si.part p
+        WHERE si.userId = :userId AND p.code = :partCode
+    """)
+    Optional<StoreInventory> findByUserIdAndPartCode(Long userId, String partCode);
+
 //    // 특정 부품이 부족재고인 지점 개수
 //    @Query("""
 //        select count(si) from StoreInventory si

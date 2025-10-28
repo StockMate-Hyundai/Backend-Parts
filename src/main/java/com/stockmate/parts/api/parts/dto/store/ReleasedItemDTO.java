@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ReleasedItemDTO {
+    private Long partId;            // 부품 ID
     private String partCode;        // 부품 코드
     private String partName;        // 부품 이름
     private int releasedQuantity;   // 출고된 수량

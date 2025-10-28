@@ -36,8 +36,4 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
     group by p.categoryName
     """)
     List<Object[]> categoryAmount();
-
-    // 부품 코드로 부품 조회
-    @Query("SELECT p FROM Parts p WHERE p.code = :code")
-    java.util.Optional<Parts> findByCode(@Param("code") String code);
 }
