@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.parts;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDeductionFailedEvent {
+public class StockDeductionResponseDto {
     private Long orderId;
     private String orderNumber;
-    private String approvalAttemptId; // Saga 시도 식별자
-    private String reason;
+    private String message;
+    private boolean success;
 }
+
