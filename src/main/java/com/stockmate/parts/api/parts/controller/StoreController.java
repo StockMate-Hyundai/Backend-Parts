@@ -112,6 +112,21 @@ public class StoreController {
         return ApiResponse.success(SuccessStatus.UPDATE_STORE_INVENTORY_SUCCESS, response);
     }
 
+    @Operation(summary = "가맹점 부품 출고 처리 API", description = "가맹점의 부품을 출고 처리합니다. 부품 코드로 조회하여 재고를 차감합니다.")
+    @PostMapping("/release")
+    public ResponseEntity<ApiResponse<Void>> releaseStock(
+            @RequestBody com.stockmate.parts.api.parts.dto.store.StockReleaseRequestDTO requestDTO,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+
+        log.info("가맹점 부품 출고 처리 요청 - 가맹점 ID: {}, 요청자 ID: {}, 출고 아이템 수: {}", 
+                requestDTO.getMemberId(), securityUser.getMemberId(), requestDTO.getItems().size());
+
+        storeService.releaseStock(requestDTO, securityUser.getMemberId());
+
+        log.info("가맹점 부품 출고 처리 완료 - 가맹점 ID: {}", requestDTO.getMemberId());
+        return ApiResponse.success_only(SuccessStatus.RELEASE_STOCK_SUCCESS);
+    }
+
 //
 //    @Operation(summary = "부품 분포 요약-임시 API")
 //    @GetMapping("/parts/{partId}")
