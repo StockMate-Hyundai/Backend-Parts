@@ -2,6 +2,7 @@ package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
 import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
+import com.stockmate.parts.api.parts.dto.store.ReleasedItemDTO;
 import com.stockmate.parts.api.parts.dto.store.StockReleaseRequestDTO;
 import com.stockmate.parts.api.parts.dto.store.StorePartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
@@ -249,16 +250,10 @@ public class StoreService {
     @Transactional
     public void releaseStock(StockReleaseRequestDTO requestDTO, Long requesterMemberId) {
         log.info("[StoreService] 🚚 가맹점 부품 출고 처리 시작 - 가맹점 ID: {}, 출고 아이템 수: {}", 
-                requestDTO.getMemberId(), requestDTO.getItems().size());
+                requesterMemberId, requestDTO.getItems().size());
 
-        // 권한 체크: 본인의 가맹점만 출고 처리 가능
-        if (!requestDTO.getMemberId().equals(requesterMemberId)) {
-            log.error("권한 부족 - 요청 가맹점 ID: {}, 요청자 ID: {}", requestDTO.getMemberId(), requesterMemberId);
-            throw new com.stockmate.parts.common.exception.UnauthorizedException("본인의 가맹점만 출고 처리할 수 있습니다.");
-        }
-
-        Long memberId = requestDTO.getMemberId();
-        java.util.List<com.stockmate.parts.api.parts.dto.store.ReleasedItemDTO> releasedItems = new java.util.ArrayList<>();
+        Long memberId = requesterMemberId;
+        List<ReleasedItemDTO> releasedItems = new java.util.ArrayList<>();
 
         for (com.stockmate.parts.api.parts.dto.store.StockReleaseRequestDTO.StockReleaseItem item : requestDTO.getItems()) {
             String partCode = item.getPartCode();
