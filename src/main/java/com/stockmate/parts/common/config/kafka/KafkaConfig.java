@@ -75,12 +75,23 @@ public class KafkaConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
-        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.stockmate.parts.api.parts.dto.ReceivingProcessRequestEvent");
+        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, true); // 타입 헤더 사용
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
+        // Consumer용 타입 매핑 설정
+        JsonDeserializer<Object> jsonDeserializer = new JsonDeserializer<>();
+        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+
+        Map<String, Class<?>> classIdMapping = new HashMap<>();
+        classIdMapping.put("stockDeductionRequest", StockDeductionRequestEvent.class);
+        classIdMapping.put("stockRestoreRequest", StockRestoreRequestEvent.class);
+        classIdMapping.put("receivingProcessRequest", ReceivingProcessRequestEvent.class);
+        typeMapper.setIdClassMapping(classIdMapping);
+        jsonDeserializer.setTypeMapper(typeMapper);
+        jsonDeserializer.addTrustedPackages("com.stockmate.parts.api.parts.dto,com.stockmate.order.api.order.dto");
+
         log.info("Kafka Consumer Factory 설정 완료 - Bootstrap Servers: {}", bootstrapServers);
-        return new DefaultKafkaConsumerFactory<>(props);
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new ErrorHandlingDeserializer<>(jsonDeserializer));
     }
 
     @Bean

@@ -5,10 +5,6 @@ import com.stockmate.parts.api.parts.service.PartsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,20 +19,17 @@ public class StockDeductionRequestConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void handleStockDeductionRequest(
-            @Payload StockDeductionRequestEvent event,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            Acknowledgment acknowledgment
-    ) {
-        log.info("재고 차감 요청 이벤트 수신 - 토픽: {}, 파티션: {}, 오프셋: {}, Order ID: {}, Order Number: {}, Items: {}",
-                topic, partition, offset, event.getOrderId(), event.getOrderNumber(), event.getItems().size());
+    public void handleStockDeductionRequest(StockDeductionRequestEvent event) {
+        log.info("=== 재고 차감 요청 이벤트 수신 === Order ID: {}, Order Number: {}, Items: {}",
+                event.getOrderId(), event.getOrderNumber(), event.getItems().size());
 
-        // 재고 차감 처리
-        partsService.deductStock(event);
-        acknowledgment.acknowledge();
-        
-        log.info("재고 차감 요청 처리 완료 - Order ID: {}", event.getOrderId());
+        try {
+            // 재고 차감 처리
+            partsService.deductStock(event);
+
+            log.info("=== 재고 차감 요청 처리 완료 === Order ID: {}", event.getOrderId());
+        } catch (Exception e) {
+            log.error("=== 재고 차감 요청 처리 실패 === Order ID: {}, 에러: {}", event.getOrderId(), e.getMessage(), e);
+        }
     }
 }
