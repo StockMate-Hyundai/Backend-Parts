@@ -1,15 +1,16 @@
 package com.stockmate.parts.api.parts.dto.parts;
 
 import com.stockmate.parts.api.parts.entity.Parts;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.stockmate.parts.api.parts.entity.StoreInventory;
+import lombok.*;
 
-@Getter @Setter
+import java.util.List;
+
+@Getter
+@RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PartsDto {
+public class StoreStockResponseDto {
     private Long id;
     private String name;
     private Long price;
@@ -20,13 +21,14 @@ public class PartsDto {
     private String korName;
     private String engName;
     private String categoryName;
-    private Integer amount;
     private String code;
     private String location;
     private Long cost;
+    private Integer amount;
+    private Integer limitAmount;
 
-    public static PartsDto of(Parts p) {
-        return PartsDto.builder()
+    public static StoreStockResponseDto of(Parts p, StoreInventory si) {
+        return StoreStockResponseDto.builder()
                 .id(p.getId())
                 .name(p.getName())
                 .price(p.getPrice())
@@ -37,10 +39,11 @@ public class PartsDto {
                 .korName(p.getKorName())
                 .engName(p.getEngName())
                 .categoryName(p.getCategoryName())
-                .amount(p.getAmount())
                 .code(p.getCode())
                 .location(p.getLocation())
                 .cost(p.getCost())
+                .amount(si != null ? si.getAmount() : null)
+                .limitAmount(si != null ? si.getLimitAmount() : null)
                 .build();
     }
 }

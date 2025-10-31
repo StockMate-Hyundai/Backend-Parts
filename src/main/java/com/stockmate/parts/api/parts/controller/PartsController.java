@@ -8,9 +8,7 @@ import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,15 +42,14 @@ public class PartsController {
 
     @Operation(summary = "지점 부품 전체 조회", description = "본사에서 지점 부품을 조회합니다.")
     @GetMapping("/list/{storeId}")
-    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getStorePartsList(
+    public ResponseEntity<ApiResponse<PageResponseDto<StoreStockResponseDto>>> getStorePartsList(
             @PathVariable("storeId") Long storeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        var data = partsService.getAllParts(page, size);
+        var data = partsService.getStoreParts(storeId, page, size);
         return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
     }
-
 
     @Operation(summary = "부품 검색")
     @GetMapping("/search")
@@ -92,6 +89,15 @@ public class PartsController {
     public ResponseEntity<ApiResponse<List<CategoryAmountDto>>> categoryAmount() {
         var data = partsService.categoryAmount();
         return ApiResponse.success(SuccessStatus.PARTS_CATEGORY_AMOUNT, data);
+    }
+
+    @Operation(summary = "창고 구역별 부품 조회")
+    @GetMapping("/location")
+    public ResponseEntity<ApiResponse<List<LocationResponseDto>>> getLocationParts(
+            @RequestParam String location
+    ) {
+        var data = partsService.getLocationParts(location);
+        return ApiResponse.success(SuccessStatus.PARTS_LOCATION_SUCCESS, data);
     }
 
     @Operation(summary = "재고 차감 API (주문 승인용)")

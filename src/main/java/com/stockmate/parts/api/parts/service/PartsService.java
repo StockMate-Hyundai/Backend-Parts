@@ -2,11 +2,9 @@ package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.PartsDto;
+import com.stockmate.parts.api.parts.dto.parts.*;
 import com.stockmate.parts.api.parts.entity.Parts;
+import com.stockmate.parts.api.parts.entity.StoreInventory;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.api.parts.repository.StoreRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
@@ -65,12 +63,17 @@ public class PartsService {
     }
 
     // 본사 -> 지점 부품 조회
-    public PageResponseDto<PartsDto> getStoreParts(Long storeId, int page, int size) {
+    public PageResponseDto<StoreStockResponseDto> getStoreParts(Long storeId, int page, int size) {
         if (page < 0 || size <= 0)
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
         Pageable pageable = PageRequest.of(page, size);
-        Page<Parts> result = storeRepository.findByUserId(storeId, pageable);
-        Page<PartsDto> mapped = result.map(PartsDto::of);
+        Page<Object[]> result = storeRepository.findByUserId(storeId, pageable);
+
+        Page<StoreStockResponseDto> mapped = result.map(row -> {
+            Parts p = (Parts) row[0];
+            StoreInventory si = (StoreInventory) row[1];
+            return StoreStockResponseDto.of(p, si);
+        });
         return PageResponseDto.from(mapped);
     }
 
@@ -158,6 +161,25 @@ public class PartsService {
 
         log.info("[PartsService] 🏁 카테고리별 부품 수 조회 완료 | totalMapped={}", mapped.size());
         return mapped;
+    }
+
+    // 창고 구역별 부품 조회
+    public List<LocationResponseDto> getLocationParts(String location) {
+        List<LocationResponseDto> response = new ArrayList<>();
+        for (int i = 1; i < 5; i++) {
+            List<Parts> parts = partsRepository.getLocationParts(location, i);
+            List<PartsDto> mapped = parts.stream()
+                    .map(PartsDto::of)
+                    .toList();
+
+            LocationResponseDto dto = LocationResponseDto.builder()
+                    .floor(i)
+                    .parts(mapped)
+                    .build();
+
+            response.add(dto);
+        }
+        return response;
     }
 
     // API용 재고 차감

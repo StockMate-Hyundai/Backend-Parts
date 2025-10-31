@@ -12,7 +12,13 @@ import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
     // 본사 -> 지점 부품 검색
-    Page<Parts> findByUserId(Long storeId, Pageable pageable);
+    @Query("""
+        select p, si
+        from StoreInventory si
+        join si.part p
+        where si.userId = :storeId
+    """)
+    Page<Object[]> findByUserId(Long storeId, Pageable pageable);
 
     // 지점 부품 검색
     @Query("""
