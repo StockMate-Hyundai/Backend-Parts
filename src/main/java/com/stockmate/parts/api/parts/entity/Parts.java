@@ -25,6 +25,7 @@ public class Parts extends BaseTimeEntity {
     private String engName;
     private String categoryName;
     private Integer amount;
+    @Column(length = 500)
     private String code;
     @ElementCollection
     @CollectionTable(

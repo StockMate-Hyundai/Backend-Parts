@@ -8,6 +8,7 @@ import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
 import com.stockmate.parts.api.parts.dto.parts.PartsDto;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
+import com.stockmate.parts.api.parts.repository.StoreRepository;
 import com.stockmate.parts.common.exception.BadRequestException;
 import com.stockmate.parts.common.producer.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import java.util.List;
 @Slf4j
 public class PartsService {
     private final PartsRepository partsRepository;
+    private final StoreRepository storeRepository;
     private final KafkaProducerService kafkaProducerService;
 
     // 상세 부품 조회
@@ -60,6 +62,16 @@ public class PartsService {
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
         Pageable pageable = PageRequest.of(page, size);
         Page<Parts> result = partsRepository.findAll(pageable);
+        Page<PartsDto> mapped = result.map(PartsDto::of);
+        return PageResponseDto.from(mapped);
+    }
+
+    // 본사 -> 지점 부품 조회
+    public PageResponseDto<PartsDto> getStoreParts(Long storeId, int page, int size) {
+        if (page < 0 || size <= 0)
+            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Parts> result = storeRepository.findByUserId(storeId, pageable);
         Page<PartsDto> mapped = result.map(PartsDto::of);
         return PageResponseDto.from(mapped);
     }

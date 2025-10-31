@@ -1,5 +1,6 @@
 package com.stockmate.parts.api.parts.repository;
 
+import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.entity.StoreInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
+    // 본사 -> 지점 부품 검색
+    Page<Parts> findByUserId(Long storeId, Pageable pageable);
 
     // 지점 부품 검색
     @Query("""
