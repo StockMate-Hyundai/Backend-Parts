@@ -44,7 +44,7 @@ public class PartsController {
 
     @Operation(summary = "지점 부품 전체 조회", description = "본사에서 지점 부품을 조회합니다.")
     @GetMapping("/list/{storeId}")
-    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getStorePartsList(
+    public ResponseEntity<ApiResponse<PageResponseDto<StoreStockResponseDto>>> getStorePartsList(
             @PathVariable("storeId") Long storeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
