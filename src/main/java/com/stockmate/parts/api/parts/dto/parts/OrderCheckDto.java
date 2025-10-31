@@ -12,4 +12,6 @@ public class OrderCheckDto {
     private Integer requestedAmount;
     private Integer availableStock;
     private Boolean canOrder;
+    private String categoryName;
+    private String name;
 }
