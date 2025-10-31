@@ -2,10 +2,7 @@ package com.stockmate.parts.api.parts.service;
 
 import com.stockmate.parts.api.parts.dto.common.CategoryAmountDto;
 import com.stockmate.parts.api.parts.dto.common.PageResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckReqDto;
-import com.stockmate.parts.api.parts.dto.parts.OrderCheckResponseDto;
-import com.stockmate.parts.api.parts.dto.parts.PartsDto;
+import com.stockmate.parts.api.parts.dto.parts.*;
 import com.stockmate.parts.api.parts.entity.Parts;
 import com.stockmate.parts.api.parts.repository.PartsRepository;
 import com.stockmate.parts.api.parts.repository.StoreRepository;
@@ -158,6 +155,25 @@ public class PartsService {
 
         log.info("[PartsService] 🏁 카테고리별 부품 수 조회 완료 | totalMapped={}", mapped.size());
         return mapped;
+    }
+
+    // 창고 구역별 부품 조회
+    public List<LocationResponseDto> getLocationParts(String location) {
+        List<LocationResponseDto> response = new ArrayList<>();
+        for (int i = 1; i < 5; i++) {
+            List<Parts> parts = partsRepository.getLocationParts(location, i);
+            List<PartsDto> mapped = parts.stream()
+                    .map(PartsDto::of)
+                    .toList();
+
+            LocationResponseDto dto = LocationResponseDto.builder()
+                    .floor(i)
+                    .parts(mapped)
+                    .build();
+
+            response.add(dto);
+        }
+        return response;
     }
 
     // API용 재고 차감

@@ -8,9 +8,7 @@ import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,6 +90,15 @@ public class PartsController {
     public ResponseEntity<ApiResponse<List<CategoryAmountDto>>> categoryAmount() {
         var data = partsService.categoryAmount();
         return ApiResponse.success(SuccessStatus.PARTS_CATEGORY_AMOUNT, data);
+    }
+
+    @Operation(summary = "창고 구역별 부품 조회")
+    @GetMapping("/location")
+    public ResponseEntity<ApiResponse<List<LocationResponseDto>>> getLocationParts(
+            @RequestParam String location
+    ) {
+        var data = partsService.getLocationParts(location);
+        return ApiResponse.success(SuccessStatus.PARTS_LOCATION_SUCCESS, data);
     }
 
     @Operation(summary = "재고 차감 API (주문 승인용)")

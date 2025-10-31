@@ -31,7 +31,6 @@ public class PartsDto {
                 .name(p.getName())
                 .price(p.getPrice())
                 .image(p.getImage())
-                .image(p.getImage())
                 .trim(p.getTrim())
                 .model(p.getModel())
                 .category(p.getCategory())
