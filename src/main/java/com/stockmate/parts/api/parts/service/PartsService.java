@@ -116,12 +116,13 @@ public class PartsService {
             log.info("[checkStock] partId={}, stock={}, requested={}, canOrder={}",
                     req.getPartId(), stock, req.getAmount(), canOrder);
 
-            // TODO: 코드 리팩토링
             orders.add(OrderCheckDto.builder()
                     .partId(req.getPartId())
                     .requestedAmount(req.getAmount())
                     .availableStock(stock != null ? stock : 0)
                     .canOrder(canOrder)
+                    .categoryName(part.getCategoryName())
+                    .name(part.getName())
                     .build());
         }
 
