@@ -8,7 +8,9 @@ import com.stockmate.parts.common.response.ApiResponse;
 import com.stockmate.parts.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +41,18 @@ public class PartsController {
         var data = partsService.getAllParts(page, size);
         return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
     }
+
+    @Operation(summary = "지점 부품 전체 조회", description = "본사에서 지점 부품을 조회합니다.")
+    @GetMapping("/list/{storeId}")
+    public ResponseEntity<ApiResponse<PageResponseDto<PartsDto>>> getStorePartsList(
+            @PathVariable("storeId") Long storeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var data = partsService.getAllParts(page, size);
+        return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
+    }
+
 
     @Operation(summary = "부품 검색")
     @GetMapping("/search")
