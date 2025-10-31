@@ -163,6 +163,25 @@ public class PartsService {
         return mapped;
     }
 
+    // 창고 구역별 부품 조회
+    public List<LocationResponseDto> getLocationParts(String location) {
+        List<LocationResponseDto> response = new ArrayList<>();
+        for (int i = 1; i < 5; i++) {
+            List<Parts> parts = partsRepository.getLocationParts(location, i);
+            List<PartsDto> mapped = parts.stream()
+                    .map(PartsDto::of)
+                    .toList();
+
+            LocationResponseDto dto = LocationResponseDto.builder()
+                    .floor(i)
+                    .parts(mapped)
+                    .build();
+
+            response.add(dto);
+        }
+        return response;
+    }
+
     // API용 재고 차감
     @Transactional
     public void deductStockApi(com.stockmate.parts.api.parts.dto.parts.StockDeductionRequestDto requestDto) {

@@ -36,4 +36,15 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
     group by p.categoryName
     """)
     List<Object[]> categoryAmount();
+
+    // 창고 구역별 부품 조회
+    @Query("""
+    select p
+    from Parts p
+    where p.location like concat(:location, '-', :floor)
+    """)
+    List<Parts> getLocationParts(
+            @Param("location") String location,
+            @Param("floor") Integer floor
+    );
 }
