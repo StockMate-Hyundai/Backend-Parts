@@ -28,7 +28,6 @@ import java.util.List;
 public class PartsService {
     private final PartsRepository partsRepository;
     private final StoreRepository storeRepository;
-    private final KafkaProducerService kafkaProducerService;
 
     // 상세 부품 조회
     public List<PartsDto> getPartDetail(List<Long> partIds) {
