@@ -49,10 +49,9 @@ public class PartsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        var data = partsService.getAllParts(page, size);
+        var data = partsService.getStoreParts(storeId, page, size);
         return ApiResponse.success(SuccessStatus.PARTS_LIST_SUCCESS, data);
     }
-
 
     @Operation(summary = "부품 검색")
     @GetMapping("/search")
