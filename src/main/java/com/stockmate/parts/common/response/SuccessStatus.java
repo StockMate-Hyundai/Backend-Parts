@@ -36,6 +36,7 @@ public enum SuccessStatus {
     PARTS_MODEL_CATEGORY_SUCCESS(HttpStatus.OK, "부품 검색 성공"),
     PARTS_LACK_STOCK(HttpStatus.OK, "부족 재고 조회 성공"),
     PARTS_CATEGORY_AMOUNT(HttpStatus.OK, "카테고리별 재고 수 조회 성공"),
+    PARTS_STOCK_DEDUCTION_SUCCESS(HttpStatus.OK, "재고 차감 성공"),
 
     /**
      * 201
@@ -52,6 +53,8 @@ public enum SuccessStatus {
     CREATE_FRANCHISE_SUCCESS(HttpStatus.CREATED,"가맹점 등록 성공"),
     SAVE_CONTACT_SUCCESS(HttpStatus.CREATED,"문의처 정보 등록 성공"),
     CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED,"카테고리 생성 성공"),
+    UPDATE_STORE_INVENTORY_SUCCESS(HttpStatus.OK,"가맹점 재고 업데이트 성공"),
+    RELEASE_STOCK_SUCCESS(HttpStatus.OK,"가맹점 부품 출고 처리 성공"),
 
     ;
 

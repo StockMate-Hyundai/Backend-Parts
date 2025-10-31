@@ -11,18 +11,19 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDeductionRequestEvent {
+public class ReceivingProcessRequestEvent {
     private Long orderId;
     private String orderNumber;
-    private String approvalAttemptId; // Saga 시도 식별자
-    private List<StockDeductionItem> items;
+    private String approvalAttemptId;
+    private Long memberId; // 가맹점 ID
+    private List<ReceivingItemDTO> items;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class StockDeductionItem {
+    public static class ReceivingItemDTO {
         private Long partId;
-        private int amount;
+        private int quantity;
     }
 }

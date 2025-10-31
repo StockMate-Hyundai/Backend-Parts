@@ -33,7 +33,7 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
     @Query("""
     select p.categoryName, count(p)
     from Parts p
-    group by categoryName
+    group by p.categoryName
     """)
     List<Object[]> categoryAmount();
 }

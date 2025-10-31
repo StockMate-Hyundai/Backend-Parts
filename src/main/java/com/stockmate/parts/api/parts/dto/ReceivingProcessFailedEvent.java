@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDeductionFailedEvent {
+public class ReceivingProcessFailedEvent {
     private Long orderId;
     private String orderNumber;
-    private String approvalAttemptId; // Saga 시도 식별자
-    private String reason;
+    private String approvalAttemptId;
+    private String errorMessage;
+    private Object data;
 }

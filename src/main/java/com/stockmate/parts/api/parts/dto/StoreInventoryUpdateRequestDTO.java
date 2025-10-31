@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockDeductionSuccessEvent {
-    private Long orderId;
-    private String orderNumber;
-    private String approvalAttemptId; // Saga 시도 식별자
+public class StoreInventoryUpdateRequestDTO {
+    private Long memberId; // 가맹점 ID
+    private List<StoreInventoryItemDTO> items;
 }
+

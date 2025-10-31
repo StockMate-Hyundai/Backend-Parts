@@ -1,4 +1,4 @@
-package com.stockmate.parts.api.parts.dto;
+package com.stockmate.parts.api.parts.dto.parts;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,18 +11,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockRestoreRequestEvent {
+public class StockDeductionRequestDto {
     private Long orderId;
     private String orderNumber;
-    private List<StockRestoreItem> items;
-    private String reason;
+    private List<StockDeductionItem> items;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class StockRestoreItem {
+    public static class StockDeductionItem {
         private Long partId;
         private int amount;
     }
 }
+
