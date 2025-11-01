@@ -36,6 +36,10 @@ public enum ErrorStatus {
     /**
      * 500 SERVER_ERROR
      */
+    NOT_CONNECTTION_USER_DETAIL_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 정보 조회에 실패했습니다."),
+    CHECK_USER_DETAIL_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 정보 조회 중 오류가 발생했습니다."),
+    RESPONSE_DATA_NOT_MATCH_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "외부 서버 응답이 올바르지 않습니다."),
+    PART_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "부품을 찾을 수 없습니다."),
 
     ;
 

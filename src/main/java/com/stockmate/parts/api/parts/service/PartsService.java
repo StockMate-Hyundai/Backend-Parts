@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ import java.util.List;
 public class PartsService {
     private final PartsRepository partsRepository;
     private final StoreRepository storeRepository;
+    private final com.stockmate.parts.api.parts.service.UserService userService;
 
     // 상세 부품 조회
     public List<PartsDto> getPartDetail(List<Long> partIds) {
@@ -213,5 +216,66 @@ public class PartsService {
         }
 
         log.info("API 재고 차감 완료 - Order ID: {}", requestDto.getOrderId());
+    }
+
+    // 부품 ID로 본사 및 가맹점별 재고 조회
+    public PartDistributionResponseDTO getPartDistribution(Long partId, int page, int size) {
+        log.info("[PartsService] 🔍 부품 분포 조회 시작 - Part ID: {}, Page: {}, Size: {}", partId, page, size);
+
+        // 1. 부품 조회 (본사 보유 수량)
+        Parts part = partsRepository.findById(partId)
+                .orElseThrow(() -> {
+                    log.error("[PartsService] ❌ 부품을 찾을 수 없음 - Part ID: {}", partId);
+                    return new BadRequestException(com.stockmate.parts.common.response.ErrorStatus.PART_NOT_FOUND_EXCEPTION.getMessage());
+                });
+
+        Integer headquartersQuantity = part.getAmount() != null ? part.getAmount() : 0;
+        log.info("[PartsService] 본사 보유 수량 - Part ID: {}, Quantity: {}", partId, headquartersQuantity);
+
+        // 2. 가맹점별 재고 조회 (페이지네이션)
+        if (page < 0 || size <= 0) {
+            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+        }
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<StoreInventory> storeInventoryPage = storeRepository.findByPartId(partId, pageable);
+
+        log.info("[PartsService] 가맹점 재고 조회 완료 - 총 개수: {}, 현재 페이지: {}", 
+                storeInventoryPage.getTotalElements(), storeInventoryPage.getContent().size());
+
+        // 3. User 서버에서 가맹점 정보 조회
+        List<Long> userIds = storeInventoryPage.getContent().stream()
+                .map(StoreInventory::getUserId)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+
+        final Map<Long, com.stockmate.parts.api.parts.dto.parts.UserBatchResponseDTO> userMap;
+        if (!userIds.isEmpty()) {
+            userMap = userService.getUsersByMemberIds(userIds);
+            log.info("[PartsService] 사용자 정보 조회 완료 - 조회된 사용자 수: {}", userMap.size());
+        } else {
+            userMap = new java.util.HashMap<>();
+        }
+
+        // 4. DTO 변환
+        final Map<Long, com.stockmate.parts.api.parts.dto.parts.UserBatchResponseDTO> finalUserMap = userMap;
+        Page<PartDistributionResponseDTO.StoreDistributionItem> storeItems = storeInventoryPage.map(storeInventory -> {
+            com.stockmate.parts.api.parts.dto.parts.UserBatchResponseDTO userInfo = finalUserMap.get(storeInventory.getUserId());
+            return PartDistributionResponseDTO.StoreDistributionItem.builder()
+                    .userId(storeInventory.getUserId())
+                    .quantity(storeInventory.getAmount() != null ? storeInventory.getAmount() : 0)
+                    .storeInfo(userInfo)
+                    .build();
+        });
+
+        PartDistributionResponseDTO response = PartDistributionResponseDTO.builder()
+                .partId(partId)
+                .partName(part.getKorName() != null ? part.getKorName() : part.getName())
+                .headquartersQuantity(headquartersQuantity)
+                .stores(PageResponseDto.from(storeItems))
+                .build();
+
+        log.info("[PartsService] 🏁 부품 분포 조회 완료 - Part ID: {}", partId);
+        return response;
     }
 }

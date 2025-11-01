@@ -90,6 +90,15 @@ public interface StoreRepository extends JpaRepository<StoreInventory, Long> {
     """)
     Optional<StoreInventory> findByUserIdAndPartCode(Long userId, String partCode);
 
+    // 부품 ID로 가맹점별 재고 조회 (페이지네이션)
+    @Query("""
+        SELECT si
+        FROM StoreInventory si
+        WHERE si.part.id = :partId
+        ORDER BY si.userId ASC
+    """)
+    Page<StoreInventory> findByPartId(@org.springframework.data.repository.query.Param("partId") Long partId, Pageable pageable);
+
 //    // 특정 부품이 부족재고인 지점 개수
 //    @Query("""
 //        select count(si) from StoreInventory si
