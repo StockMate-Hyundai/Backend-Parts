@@ -116,4 +116,15 @@ public class PartsController {
         
         return ApiResponse.success(SuccessStatus.PARTS_STOCK_DEDUCTION_SUCCESS, response);
     }
+
+    @Operation(summary = "부품 분포 조회 API", description = "부품 ID로 본사 보유 수량과 가맹점별 보유 수량을 조회합니다.")
+    @GetMapping("/distribution/{partId}")
+    public ResponseEntity<ApiResponse<PartDistributionResponseDTO>> getPartDistribution(
+            @PathVariable Long partId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var data = partsService.getPartDistribution(partId, page, size);
+        return ApiResponse.success(SuccessStatus.PART_DISTRIBUTION_SUCCESS, data);
+    }
 }
