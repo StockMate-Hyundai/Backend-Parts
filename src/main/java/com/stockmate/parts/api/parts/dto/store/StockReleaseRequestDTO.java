@@ -19,8 +19,8 @@ public class StockReleaseRequestDTO {
     @AllArgsConstructor
     @Builder
     public static class StockReleaseItem {
-        private String partCode; // 부품 코드
-        private int quantity;    // 출고 수량
+        private Long partId;    // 부품 ID
+        private int quantity;   // 출고 수량
     }
 }
 

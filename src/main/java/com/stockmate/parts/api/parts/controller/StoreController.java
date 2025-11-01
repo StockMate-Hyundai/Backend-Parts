@@ -113,7 +113,7 @@ public class StoreController {
         return ApiResponse.success(SuccessStatus.UPDATE_STORE_INVENTORY_SUCCESS, response);
     }
 
-    @Operation(summary = "가맹점 부품 출고 처리 API", description = "가맹점의 부품을 출고 처리합니다. 부품 코드로 조회하여 재고를 차감합니다.")
+    @Operation(summary = "가맹점 부품 출고 처리 API", description = "가맹점의 부품을 출고 처리합니다. 부품 ID로 조회하여 재고를 차감합니다.")
     @PostMapping("/release")
     public ResponseEntity<ApiResponse<Void>> releaseStock(@RequestBody StockReleaseRequestDTO requestDTO, @AuthenticationPrincipal SecurityUser securityUser) {
 

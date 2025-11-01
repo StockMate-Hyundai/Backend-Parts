@@ -256,28 +256,28 @@ public class StoreService {
         List<ReleasedItemDTO> releasedItems = new java.util.ArrayList<>();
 
         for (com.stockmate.parts.api.parts.dto.store.StockReleaseRequestDTO.StockReleaseItem item : requestDTO.getItems()) {
-            String partCode = item.getPartCode();
+            Long partId = item.getPartId();
             int quantity = item.getQuantity();
 
-            log.info("[StoreService] 부품 출고 처리 - Part Code: {}, Quantity: {}", partCode, quantity);
+            log.info("[StoreService] 부품 출고 처리 - Part ID: {}, Quantity: {}", partId, quantity);
 
-            // 1. 가맹점 ID + 부품 코드로 직접 재고 조회
-            StoreInventory storeInventory = storeRepository.findByUserIdAndPartCode(memberId, partCode)
+            // 1. 가맹점 ID + 부품 ID로 직접 재고 조회
+            StoreInventory storeInventory = storeRepository.findStoreInventoryByUserIdAndPartId(memberId, partId)
                     .orElseThrow(() -> {
-                        log.error("[StoreService] ❌ 가맹점에 해당 부품 재고가 없음 - Member ID: {}, Part Code: {}", 
-                                memberId, partCode);
+                        log.error("[StoreService] ❌ 가맹점에 해당 부품 재고가 없음 - Member ID: {}, Part ID: {}", 
+                                memberId, partId);
                         return new BadRequestException(String.format(
-                                "가맹점에 해당 부품 재고가 없습니다. Part Code: %s", partCode));
+                                "가맹점에 해당 부품 재고가 없습니다. Part ID: %d", partId));
                     });
 
             // 2. 재고 확인
             int currentAmount = storeInventory.getAmount() != null ? storeInventory.getAmount() : 0;
             if (currentAmount < quantity) {
-                log.error("[StoreService] ❌ 재고 부족 - Part Code: {}, 현재 재고: {}, 요청 수량: {}", 
-                        partCode, currentAmount, quantity);
+                log.error("[StoreService] ❌ 재고 부족 - Part ID: {}, 현재 재고: {}, 요청 수량: {}", 
+                        partId, currentAmount, quantity);
                 throw new BadRequestException(String.format(
-                        "재고가 부족합니다. Part Code: %s, 현재 재고: %d, 요청 수량: %d", 
-                        partCode, currentAmount, quantity));
+                        "재고가 부족합니다. Part ID: %d, 현재 재고: %d, 요청 수량: %d", 
+                        partId, currentAmount, quantity));
             }
 
             // 3. 재고 차감
@@ -285,13 +285,13 @@ public class StoreService {
             storeInventory.setAmount(newAmount);
             storeRepository.save(storeInventory);
 
-            log.info("[StoreService] ✅ 부품 출고 완료 - Part Code: {}, 출고 수량: {}, 남은 재고: {}", 
-                    partCode, quantity, newAmount);
+            log.info("[StoreService] ✅ 부품 출고 완료 - Part ID: {}, 출고 수량: {}, 남은 재고: {}", 
+                    partId, quantity, newAmount);
 
             // 4. 출고 결과 추가
             releasedItems.add(com.stockmate.parts.api.parts.dto.store.ReleasedItemDTO.builder()
                     .partId(storeInventory.getPart().getId())
-                    .partCode(partCode)
+                    .partCode(storeInventory.getPart().getCode())
                     .partName(storeInventory.getPart().getKorName())
                     .releasedQuantity(quantity)
                     .remainingQuantity(newAmount)
