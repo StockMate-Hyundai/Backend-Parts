@@ -323,6 +323,7 @@ public class StoreService {
         
         java.util.Map<String, Object> requestBody = new java.util.HashMap<>();
         requestBody.put("memberId", memberId);
+        requestBody.put("orderId", null); // 출고는 주문 ID 없음
         requestBody.put("orderNumber", null); // 출고는 주문 번호 없음
         requestBody.put("message", message);
         requestBody.put("status", "RELEASED");

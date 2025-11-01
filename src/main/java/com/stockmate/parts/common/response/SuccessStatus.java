@@ -38,6 +38,7 @@ public enum SuccessStatus {
     PARTS_CATEGORY_AMOUNT(HttpStatus.OK, "카테고리별 재고 수 조회 성공"),
     PARTS_STOCK_DEDUCTION_SUCCESS(HttpStatus.OK, "재고 차감 성공"),
     PARTS_LOCATION_SUCCESS(HttpStatus.OK, "창고 구역 조회 성공"),
+    PARTS_WAREHOUSE_RATIO_SUCCESS(HttpStatus.OK, "창고별 재고 비중 조회 성공"),
 
     /**
      * 201
