@@ -47,4 +47,17 @@ public interface PartsRepository extends JpaRepository<Parts, Long> {
             @Param("location") String location,
             @Param("floor") Integer floor
     );
+
+    // 창고별 재고 비중 조회 (location 첫 글자로 창고 구분, 재고 수량 합계)
+    @Query("""
+    SELECT SUBSTRING(p.location, 1, 1) as warehouse, 
+           COALESCE(SUM(p.amount), 0) as totalQuantity
+    FROM Parts p
+    WHERE p.location IS NOT NULL 
+      AND p.location != ''
+      AND SUBSTRING(p.location, 1, 1) IN ('A', 'B', 'C', 'D', 'E')
+    GROUP BY SUBSTRING(p.location, 1, 1)
+    ORDER BY SUBSTRING(p.location, 1, 1)
+    """)
+    List<Object[]> getWarehouseInventoryRatio();
 }
