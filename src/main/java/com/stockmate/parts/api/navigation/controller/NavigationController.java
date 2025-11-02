@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Navigation", description = "창고 네비게이션 관련 API입니다.")
 @RestController
-@RequestMapping("/api/v1/order/navigation")
+@RequestMapping("/api/v1/parts/navigation")
 @RequiredArgsConstructor
 @Slf4j
 public class NavigationController {
