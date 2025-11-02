@@ -24,8 +24,17 @@ public class NavigationResponseDTO {
     @Schema(description = "총 이동 거리 (Manhattan Distance)", example = "150")
     private int totalDistance;
     
-    @Schema(description = "예상 소요 시간 (초)", example = "180")
+    @Schema(description = "예상 소요 시간 (초) - 총계", example = "180")
     private int estimatedTimeSeconds;
+    
+    @Schema(description = "걷기 소요 시간 (초)", example = "120")
+    private int walkingTimeSeconds;
+    
+    @Schema(description = "부품 피킹 소요 시간 (초)", example = "48")
+    private int pickingTimeSeconds;
+    
+    @Schema(description = "버퍼 시간 (초)", example = "10")
+    private int bufferTimeSeconds;
     
     @Schema(description = "알고리즘 실행 시간 (ms)", example = "5")
     private long executionTimeMs;
