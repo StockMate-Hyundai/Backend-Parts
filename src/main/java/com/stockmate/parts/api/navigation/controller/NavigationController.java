@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Navigation", description = "창고 네비게이션 관련 API입니다.")
 @RestController
-@RequestMapping("/api/v1/navigation")
+@RequestMapping("/api/v1/order/navigation")
 @RequiredArgsConstructor
 @Slf4j
 public class NavigationController {
     
     private final NavigationService navigationService;
     
-    @Operation(summary = "최적 경로 계산 API", description = "주문 번호를 기반으로 최적의 피킹 경로를 계산합니다. (WAREHOUSE 역할만 가능)")
+    @Operation(summary = "최적 경로 계산 API", description = "주문 번호를 기반으로 최적의 피킹 경로를 계산합니다.")
     @PostMapping("/optimal")
-    @PreAuthorize("hasRole('WAREHOUSE')")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<NavigationResponseDTO>> calculateOptimalRoute(
             @RequestBody NavigationRequestDTO requestDTO) {
         
@@ -39,7 +39,7 @@ public class NavigationController {
         return ApiResponse.success(SuccessStatus.NAVIGATION_OPTIMAL_ROUTE_SUCCESS, response);
     }
     
-    @Operation(summary = "알고리즘 비교 API", description = "모든 알고리즘을 실행하여 성능을 비교합니다. (ADMIN/SUPER_ADMIN 역할만 가능)")
+    @Operation(summary = "알고리즘 비교 API", description = "모든 알고리즘을 실행하여 성능을 비교합니다.")
     @PostMapping("/compare")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<AlgorithmComparisonDTO>> compareAllAlgorithms(
