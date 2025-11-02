@@ -25,6 +25,12 @@ public class AlgorithmComparisonDTO {
     @Schema(description = "부품 개수", example = "10")
     private int partCount;
     
+    @Schema(description = "최적 거리 (최단 거리)", example = "120")
+    private int optimalDistance;
+    
+    @Schema(description = "최악 거리 (최장 거리)", example = "150")
+    private int worstDistance;
+    
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -43,11 +49,17 @@ public class AlgorithmComparisonDTO {
         @Schema(description = "최적 경로")
         private List<String> route;
         
-        @Schema(description = "알고리즘 시간 복잡도", example = "O(n²)")
+        @Schema(description = "알고리즘 시간 복잡도 (이론)", example = "O(n²)")
         private String timeComplexity;
         
-        @Schema(description = "알고리즘 정확도", example = "60~80%")
-        private String accuracy;
+        @Schema(description = "알고리즘 이론적 정확도 범위", example = "60~80%")
+        private String theoreticalAccuracy;
+        
+        @Schema(description = "실제 정확도 (최적해 대비 %)", example = "95.5")
+        private double actualAccuracy;
+        
+        @Schema(description = "최적해 여부", example = "true")
+        private boolean isOptimal;
     }
 }
 

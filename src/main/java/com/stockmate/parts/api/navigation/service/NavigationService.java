@@ -30,7 +30,15 @@ public class NavigationService {
     @Value("${order.server.url}")
     private String orderServerUrl;
     
-    private static final int WALKING_SPEED = 1; // 1초당 1 Manhattan Distance
+    // 시간 예측 설정 (application.yml에서 주입)
+    @Value("${navigation.time.seconds-per-unit:1.5}")
+    private double secondsPerUnitDistance; // 1 Manhattan Distance당 걷기 시간 (초)
+    
+    @Value("${navigation.time.picking-per-part:8}")
+    private int pickingTimePerPart; // 부품 1개당 피킹 시간 (초)
+    
+    @Value("${navigation.time.buffer:10}")
+    private int startEndBufferTime; // 시작/종료 버퍼 시간 (초)
     
     /**
      * 최적 경로 계산 (부품 개수에 따라 자동으로 알고리즘 선택)
@@ -91,7 +99,12 @@ public class NavigationService {
         
         // 5. 응답 DTO 생성
         int totalDistance = calculateTotalDistance(optimalPath);
-        int estimatedTime = totalDistance * WALKING_SPEED;
+        
+        // 예상 시간 계산 (application.yml 설정 기반)
+        // = (이동 거리 × 걷기시간) + (부품 개수 × 피킹시간) + (버퍼시간)
+        int walkingTime = (int) (totalDistance * secondsPerUnitDistance);
+        int pickingTime = locations.size() * pickingTimePerPart;
+        int estimatedTime = walkingTime + pickingTime + startEndBufferTime;
         
         List<NavigationResponseDTO.RouteStep> routeSteps = new ArrayList<>();
         int cumulativeDistance = 0;
@@ -136,14 +149,17 @@ public class NavigationService {
                     .build());
         }
         
-        log.info("최적 경로 계산 완료 - 알고리즘: {}, 총 거리: {}, 실행 시간: {}ms",
-                selectedAlgorithm.getAlgorithmName(), totalDistance, endTime - startTime);
+        log.info("최적 경로 계산 완료 - 알고리즘: {}, 총 거리: {}, 걷기: {}초, 피킹: {}초, 버퍼: {}초, 총 시간: {}초, 실행 시간: {}ms",
+                selectedAlgorithm.getAlgorithmName(), totalDistance, walkingTime, pickingTime, startEndBufferTime, estimatedTime, endTime - startTime);
         
         return NavigationResponseDTO.builder()
                 .algorithmType(selectedAlgorithm.getAlgorithmName())
                 .optimizedRoute(routeSteps)
                 .totalDistance(totalDistance)
                 .estimatedTimeSeconds(estimatedTime)
+                .walkingTimeSeconds(walkingTime)
+                .pickingTimeSeconds(pickingTime)
+                .bufferTimeSeconds(startEndBufferTime)
                 .executionTimeMs(endTime - startTime)
                 .build();
     }
@@ -185,7 +201,7 @@ public class NavigationService {
                 .map(part -> Position.parse((String) part.get("location")))
                 .collect(Collectors.toList());
         
-        // 3. 모든 알고리즘 실행
+        // 3. 모든 알고리즘 실행 (1차: 거리만 계산)
         List<PathOptimizationAlgorithm> algorithms = Arrays.asList(
                 nearestNeighborAlgorithm,
                 twoOptAlgorithm,
@@ -194,7 +210,9 @@ public class NavigationService {
                 branchAndBoundAlgorithm
         );
         
-        Map<String, AlgorithmComparisonDTO.AlgorithmResult> results = new LinkedHashMap<>();
+        Map<String, AlgorithmComparisonDTO.AlgorithmResult> tempResults = new LinkedHashMap<>();
+        int minDistance = Integer.MAX_VALUE;
+        int maxDistance = Integer.MIN_VALUE;
         
         for (PathOptimizationAlgorithm algorithm : algorithms) {
             try {
@@ -207,13 +225,21 @@ public class NavigationService {
                         .map(Position::toString)
                         .collect(Collectors.toList());
                 
-                results.put(algorithm.getAlgorithmName(), AlgorithmComparisonDTO.AlgorithmResult.builder()
+                // 최소/최대 거리 업데이트
+                if (totalDistance > 0) {
+                    minDistance = Math.min(minDistance, totalDistance);
+                    maxDistance = Math.max(maxDistance, totalDistance);
+                }
+                
+                tempResults.put(algorithm.getAlgorithmName(), AlgorithmComparisonDTO.AlgorithmResult.builder()
                         .algorithmName(algorithm.getAlgorithmName())
                         .totalDistance(totalDistance)
                         .executionTimeMs(endTime - startTime)
                         .route(routeString)
                         .timeComplexity(algorithm.getTimeComplexity())
-                        .accuracy(algorithm.getAccuracy())
+                        .theoreticalAccuracy(algorithm.getAccuracy())
+                        .actualAccuracy(0.0) // 나중에 계산
+                        .isOptimal(false) // 나중에 판단
                         .build());
                 
                 log.info("알고리즘 실행 완료 - {}: 거리={}, 시간={}ms",
@@ -221,26 +247,58 @@ public class NavigationService {
                 
             } catch (Exception e) {
                 log.error("알고리즘 실행 실패 - {}: {}", algorithm.getAlgorithmName(), e.getMessage(), e);
-                results.put(algorithm.getAlgorithmName(), AlgorithmComparisonDTO.AlgorithmResult.builder()
+                tempResults.put(algorithm.getAlgorithmName(), AlgorithmComparisonDTO.AlgorithmResult.builder()
                         .algorithmName(algorithm.getAlgorithmName())
                         .totalDistance(-1)
                         .executionTimeMs(-1)
                         .route(Collections.emptyList())
                         .timeComplexity(algorithm.getTimeComplexity())
-                        .accuracy("실패")
+                        .theoreticalAccuracy("실패")
+                        .actualAccuracy(0.0)
+                        .isOptimal(false)
                         .build());
             }
         }
         
-        // 4. 추천 알고리즘 결정
+        // 4. 실제 정확도 계산 (2차: 최적 거리 기준으로 정확도 계산)
+        Map<String, AlgorithmComparisonDTO.AlgorithmResult> results = new LinkedHashMap<>();
+        final int optimalDistance = minDistance;
+        
+        for (Map.Entry<String, AlgorithmComparisonDTO.AlgorithmResult> entry : tempResults.entrySet()) {
+            AlgorithmComparisonDTO.AlgorithmResult result = entry.getValue();
+            
+            if (result.getTotalDistance() > 0) {
+                // 실제 정확도 = (최적 거리 / 현재 거리) * 100
+                double actualAccuracy = ((double) optimalDistance / result.getTotalDistance()) * 100.0;
+                boolean isOptimal = (result.getTotalDistance() == optimalDistance);
+                
+                results.put(entry.getKey(), AlgorithmComparisonDTO.AlgorithmResult.builder()
+                        .algorithmName(result.getAlgorithmName())
+                        .totalDistance(result.getTotalDistance())
+                        .executionTimeMs(result.getExecutionTimeMs())
+                        .route(result.getRoute())
+                        .timeComplexity(result.getTimeComplexity())
+                        .theoreticalAccuracy(result.getTheoreticalAccuracy())
+                        .actualAccuracy(Math.round(actualAccuracy * 100.0) / 100.0) // 소수점 2자리
+                        .isOptimal(isOptimal)
+                        .build());
+            } else {
+                results.put(entry.getKey(), result);
+            }
+        }
+        
+        // 5. 추천 알고리즘 결정
         String recommended = selectAlgorithm(locations.size()).getAlgorithmName();
         
-        log.info("모든 알고리즘 비교 완료 - 부품 수: {}, 추천: {}", locations.size(), recommended);
+        log.info("모든 알고리즘 비교 완료 - 부품 수: {}, 추천: {}, 최적 거리: {}, 최악 거리: {}", 
+                locations.size(), recommended, minDistance, maxDistance);
         
         return AlgorithmComparisonDTO.builder()
                 .results(results)
                 .recommendedAlgorithm(recommended)
                 .partCount(locations.size())
+                .optimalDistance(minDistance)
+                .worstDistance(maxDistance)
                 .build();
     }
     
