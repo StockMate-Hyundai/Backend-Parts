@@ -35,6 +35,9 @@ public class TwoOptAlgorithm implements PathOptimizationAlgorithm {
             return path;
         }
         
+        int initialDistance = calculateTotalDistance(path);
+        log.info("2-opt 시작 - 초기 거리: {}", initialDistance);
+        
         // 2. 2-opt 개선 (시작점과 종료점은 고정)
         boolean improved = true;
         int maxIterations = 1000; // 무한 루프 방지
@@ -47,23 +50,32 @@ public class TwoOptAlgorithm implements PathOptimizationAlgorithm {
             // 시작점(0)과 종료점(n-1)은 고정, 중간 부분만 최적화
             for (int i = 1; i < path.size() - 2; i++) {
                 for (int j = i + 1; j < path.size() - 1; j++) {
-                    // 현재 거리
-                    int currentDistance = calculateSegmentDistance(path, i, j);
+                    // 2-opt: [i, j] 구간을 뒤집었을 때 거리 변화 계산
+                    // 원본: ... → path[i-1] → path[i] ... path[j] → path[j+1] → ...
+                    // Swap: ... → path[i-1] → path[j] ... path[i] → path[j+1] → ...
                     
-                    // 2-opt swap 후 거리
-                    List<Position> swappedPath = twoOptSwap(path, i, j);
-                    int swappedDistance = calculateSegmentDistance(swappedPath, i, j);
+                    // 제거되는 간선
+                    int removedDistance = path.get(i - 1).manhattanDistance(path.get(i))
+                                        + path.get(j).manhattanDistance(path.get(j + 1));
                     
-                    // 개선되었으면 적용
-                    if (swappedDistance < currentDistance) {
-                        path = swappedPath;
+                    // 추가되는 간선
+                    int addedDistance = path.get(i - 1).manhattanDistance(path.get(j))
+                                      + path.get(i).manhattanDistance(path.get(j + 1));
+                    
+                    // 개선되었으면 swap 적용
+                    if (addedDistance < removedDistance) {
+                        path = twoOptSwap(path, i, j);
                         improved = true;
+                        log.debug("2-opt 개선: 구간[{}, {}] swap, 거리 감소: {} → {}", 
+                                i, j, removedDistance, addedDistance);
                     }
                 }
             }
         }
         
-        log.debug("2-opt 개선 완료 - 반복 횟수: {}", iteration);
+        int finalDistance = calculateTotalDistance(path);
+        log.info("2-opt 완료 - 초기: {}칸, 최종: {}칸, 개선: {}칸, 반복: {}회", 
+                initialDistance, finalDistance, initialDistance - finalDistance, iteration);
         return path;
     }
     
@@ -80,20 +92,7 @@ public class TwoOptAlgorithm implements PathOptimizationAlgorithm {
     }
     
     /**
-     * 특정 구간의 거리 계산
-     */
-    private int calculateSegmentDistance(List<Position> path, int start, int end) {
-        int distance = 0;
-        for (int i = start; i <= end; i++) {
-            if (i < path.size() - 1) {
-                distance += path.get(i).manhattanDistance(path.get(i + 1));
-            }
-        }
-        return distance;
-    }
-    
-    /**
-     * 전체 경로의 총 거리 계산
+     * 전체 경로의 총 거리 계산 (디버깅용)
      */
     private int calculateTotalDistance(List<Position> path) {
         int distance = 0;
