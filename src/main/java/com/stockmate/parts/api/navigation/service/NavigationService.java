@@ -71,22 +71,30 @@ public class NavigationService {
         
         log.info("Order 서버로부터 부품 위치 정보 가져오기 완료 - 부품 수: {}", partLocations.size());
         
-        // 2. Position 객체로 변환
+        // 2. Position 객체로 변환 (중복 제거)
         Position start = Position.parse("문");
         Position end = Position.parse("포장대");
         
-        List<PartLocationWithInfo> partInfoList = partLocations.stream()
-                .map(part -> new PartLocationWithInfo(
-                        Position.parse((String) part.get("location")),
+        // 중복 위치 제거 (같은 위치에 여러 부품이 있을 수 있음)
+        Map<String, PartLocationWithInfo> uniqueLocationMap = new LinkedHashMap<>();
+        for (Map<String, Object> part : partLocations) {
+            String locationString = (String) part.get("location");
+            if (!uniqueLocationMap.containsKey(locationString)) {
+                uniqueLocationMap.put(locationString, new PartLocationWithInfo(
+                        Position.parse(locationString),
                         (String) part.get("partName"),
                         (String) part.get("orderNumber"),
                         ((Number) part.get("partId")).longValue()
-                ))
-                .collect(Collectors.toList());
+                ));
+            }
+        }
         
+        List<PartLocationWithInfo> partInfoList = new ArrayList<>(uniqueLocationMap.values());
         List<Position> locations = partInfoList.stream()
                 .map(PartLocationWithInfo::getPosition)
                 .collect(Collectors.toList());
+        
+        log.info("중복 제거 완료 - 전체 부품: {}개, 고유 위치: {}개", partLocations.size(), locations.size());
         
         // 3. 부품 개수에 따라 최적 알고리즘 선택
         PathOptimizationAlgorithm selectedAlgorithm = selectAlgorithm(locations.size());
