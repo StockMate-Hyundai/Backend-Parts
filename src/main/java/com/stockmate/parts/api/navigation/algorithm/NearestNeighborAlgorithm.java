@@ -27,7 +27,7 @@ public class NearestNeighborAlgorithm implements PathOptimizationAlgorithm {
         List<Position> path = new ArrayList<>();
         path.add(start);
         
-        // LinkedHashSet으로 순서 보장 (일관된 결과를 위해)
+        // LinkedHashSet: 입력 순서 보장 (일관된 결과를 위해)
         Set<Position> unvisited = new LinkedHashSet<>(locations);
         Position current = start;
         
