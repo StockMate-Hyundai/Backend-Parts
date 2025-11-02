@@ -141,6 +141,7 @@ public class PartsService {
                     .canOrder(canOrder)
                     .categoryName(part.getCategoryName())
                     .name(part.getName())
+                    .price(part.getPrice())
                     .build());
         }
 
