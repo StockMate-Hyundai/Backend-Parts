@@ -57,6 +57,10 @@ public enum SuccessStatus {
     CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED,"카테고리 생성 성공"),
     UPDATE_STORE_INVENTORY_SUCCESS(HttpStatus.OK,"가맹점 재고 업데이트 성공"),
     RELEASE_STOCK_SUCCESS(HttpStatus.OK,"가맹점 부품 출고 처리 성공"),
+    
+    // 네비게이션 관련
+    NAVIGATION_OPTIMAL_ROUTE_SUCCESS(HttpStatus.OK, "최적 경로 계산 성공"),
+    NAVIGATION_ALGORITHM_COMPARISON_SUCCESS(HttpStatus.OK, "알고리즘 비교 성공"),
 
     ;
 
