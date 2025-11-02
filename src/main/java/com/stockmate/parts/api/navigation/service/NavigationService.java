@@ -304,19 +304,25 @@ public class NavigationService {
     
     /**
      * 부품 개수에 따라 최적 알고리즘 선택
+     * 
+     * 선택 기준:
+     * - 1~8개: Held-Karp (DP) - 빠르고 100% 최적
+     * - 9~15개: Branch and Bound - 가지치기로 최적해 보장
+     * - 16~30개: 2-opt - 실전에서 거의 최적해, 빠름 (수십 ms 이내)
+     * - 31개 이상: Nearest Neighbor - 대량 처리, 속도 우선
      */
     private PathOptimizationAlgorithm selectAlgorithm(int partCount) {
-        if (partCount <= 5) {
-            // 소량: 정확한 해 (Held-Karp)
+        if (partCount <= 8) {
+            // 소량: 정확한 해 (Held-Karp DP)
             return heldKarpAlgorithm;
-        } else if (partCount <= 10) {
-            // 중량: 정확한 해 (Branch and Bound)
-            return branchAndBoundAlgorithm;
         } else if (partCount <= 15) {
-            // 중대량: 준최적해 (2-opt)
+            // 중량: 정확한 해 (Branch and Bound, 가지치기)
+            return branchAndBoundAlgorithm;
+        } else if (partCount <= 30) {
+            // 중대량: 준최적해 (2-opt, 85~100% 정확, 빠름)
             return twoOptAlgorithm;
         } else {
-            // 대량: 빠른 해 (Nearest Neighbor)
+            // 대량: 빠른 해 (Nearest Neighbor, 60~80% 정확, 즉각 응답)
             return nearestNeighborAlgorithm;
         }
     }
