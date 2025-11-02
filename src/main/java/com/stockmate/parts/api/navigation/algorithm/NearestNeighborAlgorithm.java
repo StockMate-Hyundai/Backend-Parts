@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,7 +27,8 @@ public class NearestNeighborAlgorithm implements PathOptimizationAlgorithm {
         List<Position> path = new ArrayList<>();
         path.add(start);
         
-        Set<Position> unvisited = new HashSet<>(locations);
+        // LinkedHashSet으로 순서 보장 (일관된 결과를 위해)
+        Set<Position> unvisited = new LinkedHashSet<>(locations);
         Position current = start;
         
         // 가장 가까운 미방문 위치를 반복적으로 선택
