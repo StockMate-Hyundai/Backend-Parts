@@ -24,6 +24,11 @@ public class NearestNeighborAlgorithm implements PathOptimizationAlgorithm {
             return List.of(start, end);
         }
         
+        // 디버그: 첫 3개 위치 로깅
+        log.info("NN 시작 - 입력 위치 개수: {}, 처음 3개: {}", 
+                locations.size(),
+                locations.stream().limit(3).map(Position::toString).toList());
+        
         List<Position> path = new ArrayList<>();
         path.add(start);
         
@@ -52,7 +57,24 @@ public class NearestNeighborAlgorithm implements PathOptimizationAlgorithm {
         }
         
         path.add(end);
+        
+        // 디버그: 첫 3개 경로 로깅
+        log.info("NN 완료 - 총 거리: {}, 처음 3개 경로: {}", 
+                calculateTotalDistance(path),
+                path.stream().limit(3).map(Position::toString).toList());
+        
         return path;
+    }
+    
+    /**
+     * 경로의 총 거리 계산 (디버그용)
+     */
+    private int calculateTotalDistance(List<Position> path) {
+        int distance = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            distance += path.get(i).manhattanDistance(path.get(i + 1));
+        }
+        return distance;
     }
     
     @Override
