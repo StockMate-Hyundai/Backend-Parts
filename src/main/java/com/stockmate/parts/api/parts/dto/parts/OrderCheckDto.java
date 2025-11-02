@@ -14,4 +14,5 @@ public class OrderCheckDto {
     private Boolean canOrder;
     private String categoryName;
     private String name;
+    private Long price;
 }
