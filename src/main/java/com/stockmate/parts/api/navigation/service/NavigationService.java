@@ -193,13 +193,21 @@ public class NavigationService {
             throw new RuntimeException("해당 주문에 부품이 없습니다.");
         }
         
-        // 2. Position 객체로 변환
+        // 2. Position 객체로 변환 (중복 제거)
         Position start = Position.parse("문");
         Position end = Position.parse("포장대");
         
-        List<Position> locations = partLocations.stream()
-                .map(part -> Position.parse((String) part.get("location")))
-                .collect(Collectors.toList());
+        // 중복된 위치 제거 (같은 위치에 여러 부품이 있을 수 있음)
+        Map<String, Position> uniqueLocationsMap = new LinkedHashMap<>();
+        for (Map<String, Object> part : partLocations) {
+            String locationString = (String) part.get("location");
+            if (!uniqueLocationsMap.containsKey(locationString)) {
+                uniqueLocationsMap.put(locationString, Position.parse(locationString));
+            }
+        }
+        List<Position> locations = new ArrayList<>(uniqueLocationsMap.values());
+        
+        log.info("중복 제거 완료 - 전체 부품: {}개, 고유 위치: {}개", partLocations.size(), locations.size());
         
         // 3. 모든 알고리즘 실행 (1차: 거리만 계산)
         List<PathOptimizationAlgorithm> algorithms = Arrays.asList(
