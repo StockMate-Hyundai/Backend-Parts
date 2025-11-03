@@ -39,9 +39,9 @@ public class Position {
     private boolean isStart;  // 시작점 (문)
     private boolean isEnd;    // 종료점 (포장대)
     
-    // 물리적 좌표 (블록 경계 반영)
-    private int x; // 물리적 가로 좌표 (블록 통로 포함)
-    private int y; // 물리적 세로 좌표 (라인 × 10 + 줄)
+    // 물리적 좌표 (실제 창고 레이아웃 반영)
+    private int x; // 물리적 가로 좌표 (블록 통로 포함, 모든 라인 공통)
+    private int y; // 물리적 세로 좌표 (0: 윗줄, 1: 아랫줄, 라인 무관!)
     private int blockNumber; // 블록 번호 (0~3)
     private int row; // 줄 (0: 윗줄, 1: 아랫줄)
     
@@ -128,13 +128,13 @@ public class Position {
             int row = (inBlockPos >= 5) ? 1 : 0; // 0: 윗줄 (0~4), 1: 아랫줄 (5~9)
             int col = inBlockPos % 5; // 블록 내 열 (0~4)
             
-            // 물리적 x 좌표 = 블록번호 × 6 + 열
+            // 물리적 x 좌표 = 블록번호 × 6 + 열 (모든 라인 공통)
             int physicalX = blockNum * 6 + col;
-            // 물리적 y 좌표 = 라인 × 10 + 줄
-            int physicalY = line * 10 + row;
+            // 물리적 y 좌표 = 줄 (0 또는 1, 라인 무관!)
+            int physicalY = row;
             
-            log.debug("위치 파싱: {} → 블록={}, 줄={}, 열={}, 물리좌표=({}, {})", 
-                    location, blockNum, row, col, physicalX, physicalY);
+            log.debug("위치 파싱: {} → 라인={}, 블록={}, 줄={}, 열={}, 물리좌표=({}, {})", 
+                    location, (char)('A' + line), blockNum, row, col, physicalX, physicalY);
             
             return Position.builder()
                     .originalLocation(location)
@@ -159,38 +159,28 @@ public class Position {
     /**
      * 실제 창고 레이아웃을 반영한 거리 계산
      * 
+     * 창고 구조:
+     * - A, B, C, D, E 라인이 수평으로 나란히 배치
+     * - 모든 라인이 같은 통로를 공유
+     * - 블록 사이 이동 시 모든 라인을 거쳐감
+     * 
      * 거리 계산 규칙:
      * 1. 기본: Manhattan Distance (|x2-x1| + |y2-y1|)
-     * 2. 같은 블록 내 줄 전환: +4 (블록 끝까지 가서 돌아와야 함)
-     * 3. 다른 블록 + 줄 전환: +2 (통로에서 줄 전환 추가 비용)
+     * 2. 라인 이동: 라인 간 거리 × 1칸 (A→B=1, A→C=2, ...)
+     * 3. 같은 블록 내 줄 전환: +4 (블록 끝까지 가서 돌아와야 함)
+     * 4. 다른 블록 + 줄 전환: +2 (통로에서 줄 전환 추가 비용)
      * 
      * 예시:
-     * - A0 → A1: 1칸 (같은 줄, 인접)
-     * - A0 → A4: 4칸 (같은 줄)
-     * - A0 → A10: 6칸 (다른 블록, 같은 줄)
-     * - A0 → A5: 5칸 (같은 블록, 줄 전환, 1 + 4)
-     * - A9 → A10: 5칸 (다른 블록, 줄 전환, 3 + 2)
-     * - A14 → A15: 9칸 (같은 블록, 줄 전환, 5 + 4)
-     * - A0 → A16: 10칸 (다른 블록, 줄 전환, 8 + 2)
+     * - A0 → A1: 1칸 (같은 라인, 같은 줄, 인접)
+     * - A3 → B10: 4칸 (다른 라인, 같은 줄, 3+1+라인1)
+     * - A0 → A5: 5칸 (같은 라인, 같은 블록, 줄 전환, 1+4)
+     * - A9 → A10: 5칸 (같은 라인, 다른 블록, 줄 전환, 3+2)
      * 
      * @param other 다른 위치
      * @return 실제 이동 거리
      */
     public int manhattanDistance(Position other) {
-        // 같은 라인(A, B, C, D, E)인지 확인
-        int thisLineNum = this.y / 10;
-        int otherLineNum = other.y / 10;
-        
-        if (thisLineNum != otherLineNum) {
-            // 다른 라인 간 이동 (A → B 등): 라인 간 거리가 큼
-            // 단순 Manhattan Distance로 처리
-            int dist = Math.abs(other.x - this.x) + Math.abs(other.y - this.y);
-            log.debug("다른 라인 간 이동: {} → {}, 거리={}", 
-                    this.originalLocation, other.originalLocation, dist);
-            return dist;
-        }
-        
-        // 같은 라인 내에서의 이동
+        // 기본 Manhattan Distance (x, y 좌표)
         int baseDistance = Math.abs(other.x - this.x) + Math.abs(other.y - this.y);
         
         // 특수 위치 (문, 포장대)는 보정 없음
@@ -200,34 +190,44 @@ public class Position {
             return baseDistance;
         }
         
-        // 줄이 같으면 보정 없음 (수평 이동만)
-        int thisRow = this.y % 10;
-        int otherRow = other.y % 10;
+        // 라인 간 이동 비용 계산
+        int lineDiff = Math.abs(other.line - this.line);
+        int lineDistance = lineDiff;  // 라인 1개당 1칸
         
-        if (thisRow == otherRow) {
-            log.debug("같은 줄 이동: {} → {}, 거리={}", 
-                    this.originalLocation, other.originalLocation, baseDistance);
-            return baseDistance;
+        // 같은 줄 (윗줄 또는 아랫줄)
+        if (this.y == other.y) {
+            int totalDistance = baseDistance + lineDistance;
+            
+            if (lineDiff > 0) {
+                log.debug("다른 라인, 같은 줄 이동: {} ({}라인) → {} ({}라인), 기본={}, 라인={}, 최종={}", 
+                        this.originalLocation, (char)('A' + this.line),
+                        other.originalLocation, (char)('A' + other.line),
+                        baseDistance, lineDistance, totalDistance);
+            } else {
+                log.debug("같은 라인, 같은 줄 이동: {} → {}, 거리={}", 
+                        this.originalLocation, other.originalLocation, totalDistance);
+            }
+            return totalDistance;
         }
         
-        // 줄이 다른 경우: 페널티 적용
+        // 다른 줄 (윗줄 ↔ 아랫줄): 페널티 적용
         if (this.blockNumber == other.blockNumber) {
             // 케이스 1: 같은 블록 내 줄 전환
             // 블록 끝까지 가서 돌아와야 하므로 +4
-            int finalDistance = baseDistance + 4;
-            log.debug("같은 블록 내 줄 전환: {} (블록 {}) → {} (블록 {}), 기본={}, 최종={}", 
-                    this.originalLocation, this.blockNumber, 
-                    other.originalLocation, other.blockNumber, 
-                    baseDistance, finalDistance);
+            int finalDistance = baseDistance + lineDistance + 4;
+            log.debug("같은 블록 내 줄 전환: {} ({}라인, 블록{}) → {} ({}라인, 블록{}), 기본={}, 라인={}, 최종={}", 
+                    this.originalLocation, (char)('A' + this.line), this.blockNumber,
+                    other.originalLocation, (char)('A' + other.line), other.blockNumber,
+                    baseDistance, lineDistance, finalDistance);
             return finalDistance;
         } else {
             // 케이스 2: 다른 블록 + 줄 전환
             // 통로에서 줄 전환 시 추가 비용 +2
-            int finalDistance = baseDistance + 2;
-            log.debug("다른 블록 + 줄 전환: {} (블록 {}) → {} (블록 {}), 기본={}, 최종={}", 
-                    this.originalLocation, this.blockNumber, 
-                    other.originalLocation, other.blockNumber, 
-                    baseDistance, finalDistance);
+            int finalDistance = baseDistance + lineDistance + 2;
+            log.debug("다른 블록 + 줄 전환: {} ({}라인, 블록{}) → {} ({}라인, 블록{}), 기본={}, 라인={}, 최종={}", 
+                    this.originalLocation, (char)('A' + this.line), this.blockNumber,
+                    other.originalLocation, (char)('A' + other.line), other.blockNumber,
+                    baseDistance, lineDistance, finalDistance);
             return finalDistance;
         }
     }
