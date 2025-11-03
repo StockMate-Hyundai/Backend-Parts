@@ -57,34 +57,33 @@ public class Position {
         
         location = location.trim();
         
-        // 시작점 (문)
+        // 시작점 (문) - A구역 첫 번째 라인 바로 윗줄
         if (location.equals("문") || location.equalsIgnoreCase("door") || location.equalsIgnoreCase("start")) {
             return Position.builder()
                     .originalLocation(location)
-                    .line(0)
+                    .line(0) // A 라인
                     .position(0)
                     .shelf(null)
                     .isStart(true)
                     .isEnd(false)
-                    .x(0)
-                    .y(0)
+                    .x(0) // A0 위치
+                    .y(0) // 윗줄
                     .blockNumber(-1) // 특수 위치
                     .row(0)
                     .build();
         }
         
-        // 종료점 (포장대)
+        // 종료점 (포장대) - E35~E39 라인 바로 아랫줄
         if (location.equals("포장대") || location.equalsIgnoreCase("packing") || location.equalsIgnoreCase("end")) {
-            // 포장대 위치는 E39 오른쪽 끝 아래로 가정
             return Position.builder()
                     .originalLocation(location)
                     .line(4) // E 라인
-                    .position(39)
+                    .position(37) // E35~E39 중간 (E37)
                     .shelf(null)
                     .isStart(false)
                     .isEnd(true)
-                    .x(30) // 블록3 끝 (3 × 6 + 4 = 22) + 약간 여유
-                    .y(41) // E라인 아랫줄 (4 × 10 + 1)
+                    .x(23) // 블록3 중간 (3 × 6 + 5 = 23)
+                    .y(1) // 아랫줄
                     .blockNumber(-1) // 특수 위치
                     .row(1)
                     .build();
@@ -192,43 +191,76 @@ public class Position {
         
         // 라인 간 이동 비용 계산
         int lineDiff = Math.abs(other.line - this.line);
-        int lineDistance = lineDiff;  // 라인 1개당 1칸
+        int lineDistance = lineDiff * 5;  // 라인 1개당 5칸 (같은 라인 우선 유도)
         
-        // 같은 줄 (윗줄 또는 아랫줄)
-        if (this.y == other.y) {
-            int totalDistance = baseDistance + lineDistance;
-            
-            if (lineDiff > 0) {
-                log.debug("다른 라인, 같은 줄 이동: {} ({}라인) → {} ({}라인), 기본={}, 라인={}, 최종={}", 
-                        this.originalLocation, (char)('A' + this.line),
-                        other.originalLocation, (char)('A' + other.line),
-                        baseDistance, lineDistance, totalDistance);
-            } else {
-                log.debug("같은 라인, 같은 줄 이동: {} → {}, 거리={}", 
-                        this.originalLocation, other.originalLocation, totalDistance);
-            }
+        // ===== 케이스 1: 같은 라인, 같은 줄 =====
+        if (this.line == other.line && this.y == other.y) {
+            int totalDistance = baseDistance;
+            log.debug("같은 라인, 같은 줄: {} → {}, 거리={}", 
+                    this.originalLocation, other.originalLocation, totalDistance);
             return totalDistance;
         }
         
-        // 다른 줄 (윗줄 ↔ 아랫줄): 페널티 적용
+        // ===== 케이스 2: 같은 라인, 다른 줄 (A3 → A16) =====
+        if (this.line == other.line && this.y != other.y) {
+            if (this.blockNumber == other.blockNumber) {
+                // 같은 블록 내 줄 전환: 블록 끝까지 가서 돌아와야 함 (+4)
+                int totalDistance = baseDistance + 4;
+                log.debug("같은 라인, 같은 블록, 다른 줄: {} → {}, 거리={}", 
+                        this.originalLocation, other.originalLocation, totalDistance);
+                return totalDistance;
+            } else {
+                // 다른 블록 줄 전환: 통로에서 전환 (+2)
+                int totalDistance = baseDistance + 2;
+                log.debug("같은 라인, 다른 블록, 다른 줄: {} → {}, 거리={}", 
+                        this.originalLocation, other.originalLocation, totalDistance);
+                return totalDistance;
+            }
+        }
+        
+        // ===== 케이스 3: 통로 공유 (A5~A9 ↔ B0~B4, A15~A19 ↔ B10~B14...) =====
+        // 조건: 같은 블록 + 다른 줄 + 라인이 정확히 1 차이 + 한쪽은 아랫줄, 한쪽은 윗줄
+        boolean isSharedAisle = (this.blockNumber == other.blockNumber) 
+                && (this.y != other.y) 
+                && (Math.abs(this.line - other.line) == 1)
+                && ((this.y == 1 && other.y == 0 && this.line + 1 == other.line) 
+                    || (this.y == 0 && other.y == 1 && other.line + 1 == this.line));
+        
+        if (isSharedAisle) {
+            // 통로를 공유하므로 라인 비용 없음!
+            int totalDistance = baseDistance;
+            log.debug("통로 공유: {} ({}라인, 블록{}, {}줄) ↔ {} ({}라인, 블록{}, {}줄), 거리={}", 
+                    this.originalLocation, (char)('A' + this.line), this.blockNumber, this.y == 0 ? "윗" : "아랫",
+                    other.originalLocation, (char)('A' + other.line), other.blockNumber, other.y == 0 ? "윗" : "아랫",
+                    totalDistance);
+            return totalDistance;
+        }
+        
+        // ===== 케이스 4: 다른 라인, 같은 줄 (A3 → B10) =====
+        if (this.line != other.line && this.y == other.y) {
+            int totalDistance = baseDistance + lineDistance;
+            log.debug("다른 라인, 같은 줄: {} ({}라인) → {} ({}라인), 기본={}, 라인={}, 최종={}", 
+                    this.originalLocation, (char)('A' + this.line),
+                    other.originalLocation, (char)('A' + other.line),
+                    baseDistance, lineDistance, totalDistance);
+            return totalDistance;
+        }
+        
+        // ===== 케이스 5: 다른 라인, 다른 줄 (일반적인 라인 + 줄 전환) =====
         if (this.blockNumber == other.blockNumber) {
-            // 케이스 1: 같은 블록 내 줄 전환
-            // 블록 끝까지 가서 돌아와야 하므로 +4
-            int finalDistance = baseDistance + lineDistance + 4;
-            log.debug("같은 블록 내 줄 전환: {} ({}라인, 블록{}) → {} ({}라인, 블록{}), 기본={}, 라인={}, 최종={}", 
-                    this.originalLocation, (char)('A' + this.line), this.blockNumber,
-                    other.originalLocation, (char)('A' + other.line), other.blockNumber,
-                    baseDistance, lineDistance, finalDistance);
-            return finalDistance;
+            // 같은 블록 내 라인+줄 전환
+            int totalDistance = baseDistance + lineDistance + 4;
+            log.debug("다른 라인, 같은 블록, 다른 줄: {} → {}, 기본={}, 라인={}, 최종={}", 
+                    this.originalLocation, other.originalLocation,
+                    baseDistance, lineDistance, totalDistance);
+            return totalDistance;
         } else {
-            // 케이스 2: 다른 블록 + 줄 전환
-            // 통로에서 줄 전환 시 추가 비용 +2
-            int finalDistance = baseDistance + lineDistance + 2;
-            log.debug("다른 블록 + 줄 전환: {} ({}라인, 블록{}) → {} ({}라인, 블록{}), 기본={}, 라인={}, 최종={}", 
-                    this.originalLocation, (char)('A' + this.line), this.blockNumber,
-                    other.originalLocation, (char)('A' + other.line), other.blockNumber,
-                    baseDistance, lineDistance, finalDistance);
-            return finalDistance;
+            // 다른 블록 라인+줄 전환
+            int totalDistance = baseDistance + lineDistance + 2;
+            log.debug("다른 라인, 다른 블록, 다른 줄: {} → {}, 기본={}, 라인={}, 최종={}", 
+                    this.originalLocation, other.originalLocation,
+                    baseDistance, lineDistance, totalDistance);
+            return totalDistance;
         }
     }
     
