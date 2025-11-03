@@ -68,7 +68,7 @@ public class Position {
                     .isEnd(false)
                     .x(0) // A0 위치
                     .y(0) // 윗줄
-                    .blockNumber(-1) // 특수 위치
+                    .blockNumber(0) // 블록0 (A0~A9)
                     .row(0)
                     .build();
         }
@@ -84,7 +84,7 @@ public class Position {
                     .isEnd(true)
                     .x(23) // 블록3 중간 (3 × 6 + 5 = 23)
                     .y(1) // 아랫줄
-                    .blockNumber(-1) // 특수 위치
+                    .blockNumber(3) // 블록3 (E30~E39)
                     .row(1)
                     .build();
         }
@@ -181,13 +181,6 @@ public class Position {
     public int manhattanDistance(Position other) {
         // 기본 Manhattan Distance (x, y 좌표)
         int baseDistance = Math.abs(other.x - this.x) + Math.abs(other.y - this.y);
-        
-        // 특수 위치 (문, 포장대)는 보정 없음
-        if (this.blockNumber == -1 || other.blockNumber == -1) {
-            log.debug("특수 위치 이동: {} → {}, 거리={}", 
-                    this.originalLocation, other.originalLocation, baseDistance);
-            return baseDistance;
-        }
         
         // 라인 간 이동 비용 계산
         int lineDiff = Math.abs(other.line - this.line);
