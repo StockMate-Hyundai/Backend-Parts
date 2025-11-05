@@ -15,4 +15,5 @@ public class OrderCheckDto {
     private String categoryName;
     private String name;
     private Long price;
+    private Long cost;  // 원가
 }
