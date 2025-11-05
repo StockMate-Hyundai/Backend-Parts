@@ -142,6 +142,7 @@ public class PartsService {
                     .categoryName(part.getCategoryName())
                     .name(part.getName())
                     .price(part.getPrice())
+                    .cost((long) part.getCost())  // 원가 추가
                     .build());
         }
 
