@@ -143,6 +143,7 @@ public class PartsService {
                     .name(part.getName())
                     .price(part.getPrice())
                     .cost((long) part.getCost())  // 원가 추가
+                    .location(part.getLocation())  // 창고 위치 추가
                     .build());
         }
 
