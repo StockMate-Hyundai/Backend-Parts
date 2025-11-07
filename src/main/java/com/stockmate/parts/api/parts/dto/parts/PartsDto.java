@@ -24,6 +24,7 @@ public class PartsDto {
     private String code;
     private String location;
     private Long cost;
+    private Double weight;
 
     public static PartsDto of(Parts p) {
         return PartsDto.builder()
@@ -41,6 +42,7 @@ public class PartsDto {
                 .code(p.getCode())
                 .location(p.getLocation())
                 .cost(p.getCost())
+                .weight(p.getWeight())
                 .build();
     }
 }

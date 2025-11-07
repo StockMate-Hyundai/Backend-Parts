@@ -36,4 +36,5 @@ public class Parts extends BaseTimeEntity {
     private List<String> code_;
     private String location;
     private Long cost;
+    private Double weight;
 }
