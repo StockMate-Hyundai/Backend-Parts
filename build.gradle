@@ -49,7 +49,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // H2
-    //runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
 
     // MYSQL
     implementation 'com.mysql:mysql-connector-j:9.1.0'

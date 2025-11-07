@@ -5,6 +5,8 @@ import com.stockmate.parts.api.navigation.dto.AlgorithmComparisonDTO;
 import com.stockmate.parts.api.navigation.dto.NavigationRequestDTO;
 import com.stockmate.parts.api.navigation.dto.NavigationResponseDTO;
 import com.stockmate.parts.api.navigation.model.Position;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,7 +86,8 @@ public class NavigationService {
                         Position.parse(locationString),
                         (String) part.get("partName"),
                         (String) part.get("orderNumber"),
-                        ((Number) part.get("partId")).longValue()
+                        ((Number) part.get("partId")).longValue(),
+                        (Double) part.get("weight")
                 ));
             }
         }
@@ -160,6 +163,138 @@ public class NavigationService {
         log.info("최적 경로 계산 완료 - 알고리즘: {}, 총 거리: {}, 걷기: {}초, 피킹: {}초, 버퍼: {}초, 총 시간: {}초, 실행 시간: {}ms",
                 selectedAlgorithm.getAlgorithmName(), totalDistance, walkingTime, pickingTime, startEndBufferTime, estimatedTime, endTime - startTime);
         
+        return NavigationResponseDTO.builder()
+                .algorithmType(selectedAlgorithm.getAlgorithmName())
+                .optimizedRoute(routeSteps)
+                .totalDistance(totalDistance)
+                .estimatedTimeSeconds(estimatedTime)
+                .walkingTimeSeconds(walkingTime)
+                .pickingTimeSeconds(pickingTime)
+                .bufferTimeSeconds(startEndBufferTime)
+                .executionTimeMs(endTime - startTime)
+                .build();
+    }
+
+    public NavigationResponseDTO calculateOptimalWeightRoute(NavigationRequestDTO requestDTO) {
+        log.info("최적 경로 계산 시작 - 주문 번호 수: {}", requestDTO.getOrderNumbers().size());
+
+        // 1. Order 서버로부터 부품 위치 정보 가져오기
+        Map<String, Object> orderRequest = new HashMap<>();
+        orderRequest.put("orderNumbers", requestDTO.getOrderNumbers());
+
+        Map<String, Object> orderResponse = webClientBuilder.build()
+                .post()
+                .uri(orderServerUrl + "/api/v1/order/navigation/parts")
+                .bodyValue(orderRequest)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        if (orderResponse == null || !orderResponse.containsKey("data")) {
+            throw new RuntimeException("Order 서버로부터 부품 정보를 가져오지 못했습니다.");
+        }
+
+        Map<String, Object> data = (Map<String, Object>) orderResponse.get("data");
+        List<Map<String, Object>> partLocations = (List<Map<String, Object>>) data.get("partLocations");
+
+        if (partLocations == null || partLocations.isEmpty()) {
+            throw new RuntimeException("해당 주문에 부품이 없습니다.");
+        }
+
+        log.info("Order 서버로부터 부품 위치 정보 가져오기 완료 - 부품 수: {}", partLocations.size());
+
+        // 2. Position 객체로 변환 (중복 제거)
+        Position start = Position.parse("문");
+        Position end = Position.parse("포장대");
+
+        // 중복 위치 제거 (같은 위치에 여러 부품이 있을 수 있음)
+        Map<String, PartLocationWithInfo> uniqueLocationMap = new LinkedHashMap<>();
+        for (Map<String, Object> part : partLocations) {
+            String locationString = (String) part.get("location");
+            if (!uniqueLocationMap.containsKey(locationString)) {
+                uniqueLocationMap.put(locationString, new PartLocationWithInfo(
+                        Position.parse(locationString),
+                        (String) part.get("partName"),
+                        (String) part.get("orderNumber"),
+                        ((Number) part.get("partId")).longValue(),
+                        (Double) part.get("weight")
+                ));
+            }
+        }
+
+        List<PartLocationWithInfo> partInfoList = new ArrayList<>(uniqueLocationMap.values());
+        List<Position> locations = partInfoList.stream()
+                .map(PartLocationWithInfo::getPosition)
+                .collect(Collectors.toList());
+
+        log.info("중복 제거 완료 - 전체 부품: {}개, 고유 위치: {}개", partLocations.size(), locations.size());
+
+        // -----------------------------------------------------------------------------------------------
+
+        // 3. 부품 개수에 따라 최적 알고리즘 선택
+        PathOptimizationAlgorithm selectedAlgorithm = selectAlgorithm(locations.size());
+        log.info("선택된 알고리즘: {} (부품 개수: {})", selectedAlgorithm.getAlgorithmName(), locations.size());
+
+        // 4. 최적 경로 계산
+        long startTime = System.currentTimeMillis();
+        List<Position> optimalPath = selectedAlgorithm.findOptimalPath(start, end, locations);
+        long endTime = System.currentTimeMillis();
+
+        // 5. 응답 DTO 생성
+        int totalDistance = calculateTotalDistance(optimalPath);
+
+        // 예상 시간 계산 (application.yml 설정 기반)
+        // = (이동 거리 × 걷기시간) + (부품 개수 × 피킹시간) + (버퍼시간)
+        int walkingTime = (int) (totalDistance * secondsPerUnitDistance);
+        int pickingTime = locations.size() * pickingTimePerPart;
+        int estimatedTime = walkingTime + pickingTime + startEndBufferTime;
+
+        List<NavigationResponseDTO.RouteStep> routeSteps = new ArrayList<>();
+        int cumulativeDistance = 0;
+
+        for (int i = 0; i < optimalPath.size(); i++) {
+            Position pos = optimalPath.get(i);
+            int distanceFromPrevious = 0;
+
+            if (i > 0) {
+                distanceFromPrevious = optimalPath.get(i - 1).manhattanDistance(pos);
+                cumulativeDistance += distanceFromPrevious;
+            }
+
+            // 부품 정보 찾기
+            String description = null;
+            String orderNumber = null;
+            Long partId = null;
+
+            if (!pos.isStart() && !pos.isEnd()) {
+                for (PartLocationWithInfo info : partInfoList) {
+                    if (info.getPosition().equals(pos)) {
+                        description = info.getPartName();
+                        orderNumber = info.getOrderNumber();
+                        partId = info.getPartId();
+                        break;
+                    }
+                }
+            } else if (pos.isStart()) {
+                description = "시작점";
+            } else if (pos.isEnd()) {
+                description = "종료점";
+            }
+
+            routeSteps.add(NavigationResponseDTO.RouteStep.builder()
+                    .location(pos.toString())
+                    .description(description)
+                    .sequence(i)
+                    .cumulativeDistance(cumulativeDistance)
+                    .distanceFromPrevious(distanceFromPrevious)
+                    .orderNumber(orderNumber)
+                    .partId(partId)
+                    .build());
+        }
+
+        log.info("최적 경로 계산 완료 - 알고리즘: {}, 총 거리: {}, 걷기: {}초, 피킹: {}초, 버퍼: {}초, 총 시간: {}초, 실행 시간: {}ms",
+                selectedAlgorithm.getAlgorithmName(), totalDistance, walkingTime, pickingTime, startEndBufferTime, estimatedTime, endTime - startTime);
+
         return NavigationResponseDTO.builder()
                 .algorithmType(selectedAlgorithm.getAlgorithmName())
                 .optimizedRoute(routeSteps)
@@ -353,38 +488,18 @@ public class NavigationService {
         }
         return distance;
     }
-    
+
     /**
      * 부품 위치와 정보를 함께 저장하는 내부 클래스
      */
+    @Getter
+    @AllArgsConstructor
     private static class PartLocationWithInfo {
         private final Position position;
         private final String partName;
         private final String orderNumber;
         private final Long partId;
-        
-        public PartLocationWithInfo(Position position, String partName, String orderNumber, Long partId) {
-            this.position = position;
-            this.partName = partName;
-            this.orderNumber = orderNumber;
-            this.partId = partId;
-        }
-        
-        public Position getPosition() {
-            return position;
-        }
-        
-        public String getPartName() {
-            return partName;
-        }
-        
-        public String getOrderNumber() {
-            return orderNumber;
-        }
-        
-        public Long getPartId() {
-            return partId;
-        }
+        private final Double weight;
     }
 }
 
